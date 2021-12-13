@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace AdventOfCode_2021
 {
-    class AoC8 : AdventOfCode
+    class AoCDigits8 : AdventOfCode
     {
         public override void Run1()
         {

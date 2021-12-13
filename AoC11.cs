@@ -4,7 +4,7 @@ using System.Text;
 
 namespace AdventOfCode_2021
 {
-    class AoC11 : AdventOfCode
+    class AoCOctopuses11 : AdventOfCode
     {
         Tilemap _octopuses;
         public override void Run1()

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 namespace AdventOfCode_2021
 {
-    class AoC10 : AdventOfCode
+    class AoCChunks10 : AdventOfCode
     {
         public override void Run1() { }
         public override void Run2()

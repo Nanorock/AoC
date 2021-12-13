@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace AdventOfCode_2021
 {
-    class AoC1 : AdventOfCode
+    class AoCSimpleCommands1 : AdventOfCode
     {
         public override void Run1() { }
         public override void Run2()

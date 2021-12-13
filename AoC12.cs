@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace AdventOfCode_2021
 {
-    class AoC12 : AdventOfCode
+    class AoCCaves12 : AdventOfCode
     {
         Cave _start;
         public override void Init() { _start = BuildCaveMap(); }

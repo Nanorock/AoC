@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace AdventOfCode_2021
 {
-    class AoC13 : AdventOfCode
+    class AoCFolding13 : AdventOfCode
     {
         Tilemap _paper;
         List<(bool horizontal, int coord)> _folds;
@@ -84,7 +84,8 @@ namespace AdventOfCode_2021
             }
             sw.Stop();
 
-            foreach(var line in _paper.PrintStateLines(width, height, 5))
+            var printer = _paper.GetPrinter();
+            foreach (var line in printer.PrintStateLines(width, height, 5))
                 ColorConsole.PrintLine(line);
             //WriteLine(_paper.PrintState(width, height));
             WriteLine($"After fold, dot count:{_paper.Count(x=>x>0)} in {sw.Elapsed.TotalMilliseconds}ms");

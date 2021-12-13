@@ -39,35 +39,36 @@ namespace AdventOfCode_2021
     enum ERunPart { Both, Part1, Part2 }
     abstract class AdventOfCode
     {
-        static readonly Dictionary<int, Type> AocTypes = new Dictionary<int, Type>();
-        public static int LatestDay()
+        static Dictionary<int, AdventOfCode> _aocTypes;
+        static Dictionary<int, AdventOfCode> AoCs
         {
-            var types = Assembly.GetCallingAssembly().GetTypes();
-            int latestDay = 0;
-            for (int i = 0; i < types.Length; i++)
+            get
             {
-                if (types[i].BaseType != typeof(AdventOfCode)) continue;
-                var day = int.Parse(new string(types[i].Name.Where(char.IsDigit).ToArray()));
-                AocTypes[day] = types[i];
-                if (day > latestDay)
-                    latestDay = day;
+                if (_aocTypes == null)
+                {
+                    _aocTypes = new Dictionary<int, AdventOfCode>();
+                    var types = Assembly.GetCallingAssembly().GetTypes();
+                    for (int i = 0; i < types.Length; i++)
+                    {
+                        if (types[i].BaseType != typeof(AdventOfCode)) continue;
+                        var day = int.Parse(new string(types[i].Name.Where(char.IsDigit).ToArray()));
+                        AoCs[day] = Activator.CreateInstance(types[i]) as AdventOfCode;
+                    }
+                }
+                return _aocTypes;
             }
-            return latestDay;
         }
+        public static int LatestDay() => AoCs.Select(kvp => kvp.Key).Max();
         public static AdventOfCode Create(int aocDay, bool example)
         {
-            if(!AocTypes.TryGetValue(aocDay, out var aocType))
-                AocTypes[aocDay] = aocType = Type.GetType($"AdventOfCode_2021.AoC{aocDay}");
-            if (aocType == null) return null;
-            return Create(aocType, example);
+            if (AoCs.TryGetValue(aocDay, out var aoc))
+            {
+                aoc.SetInput(example);
+                return aoc;
+            }
+            return null;
         }
-        static AdventOfCode Create(Type aocType, bool example)
-        {
-            var aoc = Activator.CreateInstance(aocType) as AdventOfCode;
-            aoc.SetInput(example);
-            return aoc;
-        }
-
+        
         protected string[] inputFile;
         void SetInput(bool example = false)
         {

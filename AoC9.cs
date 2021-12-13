@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace AdventOfCode_2021
 {
-    class AoC9 : AdventOfCode
+    class AoCBasins9 : AdventOfCode
     {
         private Tilemap tileMap;
 

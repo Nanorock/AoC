@@ -46,9 +46,7 @@ namespace AdventOfCode_2021
             }
         }
 
-        public string PrintState() => PrintState(Width, Height);
-        public string PrintState(int width, int height, bool inverseY = false) => PrintState(width, height, GetState, inverseY);
-        public IEnumerable<string> PrintStateLines(int width, int height, int xColorWidth) => PrintStateLines(width, height, GetState, xColorWidth);
+        public TilemapPrinter<int> GetPrinter() => new TilemapPrinter<int>(Get, GetState, Width, Height);
         string GetState(int id) => id > 0 ? id.ToString() : " ";
     }
     public class BaseTilemap<T>
@@ -124,78 +122,25 @@ namespace AdventOfCode_2021
             x = id - y * _width;
         }
 
-        static readonly int[] X4Offset = { 0, 1, 0, -1 };
-        static readonly int[] Y4Offset = { 1, 0, -1, 0 };
-        public Neighbors Get4Neighbors(int id)
+        
+        public Neighbors Get4Neighbors(int id) => GetNeighbors(id, Neighbors.X4Offset, Neighbors.Y4Offset, Neighbors.Get4);
+        public Neighbors Get8Neighbors(int id) => GetNeighbors(id, Neighbors.X8Offset, Neighbors.Y8Offset, Neighbors.Get8);
+        Neighbors GetNeighbors(int id, int[] xOffsets, int[] yOffsets, Func<Neighbors> getNeighbors)
         {
             GetXY(id, out var x, out var y);
-            var neighborSet = Neighbors.Get4();
-
-            int valid = 0;
+            var neighborSet = getNeighbors();
+            int valid = -1;
             for (int i = 0; i < neighborSet.Length; i++)
             {
-                int neighborId = GetId(x + X4Offset[i], y + Y4Offset[i]);
-                if (neighborId >= 0) neighborSet[valid++] = neighborId;
+                int neighborId = GetId(x + xOffsets[i], y + yOffsets[i]);
+                if (neighborId >= 0) neighborSet[++valid] = neighborId;
             }
             neighborSet.SetLength(valid);
             return neighborSet;
         }
 
-        static readonly int[] X8Offset = { 0, 1, 1, 1, 0, -1, -1, -1 };
-        static readonly int[] Y8Offset = { 1, 1, 0, -1, -1, -1, 0, 1 };
-        public Neighbors Get8Neighbors(int id)
-        {
-            GetXY(id, out var x, out var y);
-            var neighborSet = Neighbors.Get8();
-            int valid = 0;
-            for (int i = 0; i < neighborSet.Length; i++)
-            {
-                int neighborId = GetId(x + X8Offset[i], y + Y8Offset[i]);
-                if (neighborId >= 0) neighborSet[valid++] = neighborId;
-            }
-            neighborSet.SetLength(valid);
-            return neighborSet;
-        }
 
-        StringBuilder _sb = new StringBuilder();
-        public string PrintState(Func<T, string> getStr)
-        {
-            return PrintState(Width, Height, getStr);
-        }
-
-        public string PrintState(int width, int height, Func<T,string> getStr,  bool inverseY = false)
-        {
-            _sb.Clear();
-            for (int y = 0; y < height; y++)
-            {
-                int py = y;
-                if (inverseY) py = height - 1 - y;
-                int start = py * Width;
-                for (int x = 0; x < width; x++)
-                    _sb.Append(getStr(_board[start + x]));
-                _sb.AppendLine();
-            }
-            return _sb.ToString();
-        }
-
-        static string[] _colors = { "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta" };
-        static string GetColor(int id) => "{" + _colors[id % _colors.Length] + "}";
-        public IEnumerable<string> PrintStateLines(int width, int height, Func<T, string> getStr, int xColorWidth)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                _sb.Clear();
-                int py = y;
-                int start = py * Width;
-                for (int x = 0; x < width; x++)
-                {
-                    if (x % xColorWidth == 0)
-                        _sb.Append(GetColor(x / xColorWidth));
-                    _sb.Append(getStr(_board[start + x]));
-                }
-                yield return _sb.ToString();
-            }
-        }
+        public TilemapPrinter<T> GetPrinter(Func<T, string> print) => new TilemapPrinter<T>(Get, print, _width, _height);
 
         public int Count(Func<T, bool> filter)
         {
@@ -232,9 +177,15 @@ namespace AdventOfCode_2021
                 _board[key] = value;
         }
     }
-
+    
     public struct Neighbors : IDisposable
     {
+        public static readonly int[] X4Offset = { 0, 1, 0, -1 };
+        public static readonly int[] Y4Offset = { 1, 0, -1, 0 };
+
+        public static readonly int[] X8Offset = { 0, 1, 1, 1, 0, -1, -1, -1 };
+        public static readonly int[] Y8Offset = { 1, 1, 0, -1, -1, -1, 0, 1 };
+
         static readonly Stack<int[]> Pool4 = new Stack<int[]>();
         static readonly Stack<int[]> Pool8 = new Stack<int[]>();
         public static Neighbors Get4() => new Neighbors(Pool4);
@@ -266,4 +217,68 @@ namespace AdventOfCode_2021
         }
     }
 
+
+    public struct TilemapPrinter
+    {
+        static readonly string[] _colors = { "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta" };
+        public static string GetColor(int id) => "{" + _colors[id % _colors.Length] + "}";
+    }
+    public struct TilemapPrinter<T>
+    {
+        StringBuilder _sb;
+        int _width, _height;
+        Func<int, T> _board;
+        Func<T, string> _print;
+
+        public TilemapPrinter(Func<int, T> getter, Func<T, string> print, int width, int height)
+        {
+            _sb = new StringBuilder();
+            _width = width;
+            _height = height;
+            _board = getter;
+            _print = print;
+        }
+
+        public string PrintState(Func<T, string> getStr)
+        {
+            return PrintState(_width, _height, getStr);
+        }
+
+        public string PrintState(int width, int height, bool inverseY = false) => PrintState(width, height, _print, inverseY);
+        public string PrintState(int width, int height, Func<T, string> getStr, bool inverseY = false)
+        {
+            _sb.Clear();
+            for (int y = 0; y < height; y++)
+            {
+                int py = y;
+                if (inverseY) py = height - 1 - y;
+                int start = py * _width;
+                for (int x = 0; x < width; x++)
+                    _sb.Append(getStr(_board(start + x)));
+                _sb.AppendLine();
+            }
+            return _sb.ToString();
+        }
+
+
+
+        public IEnumerable<string> PrintStateLines(int width, int height, int xColorWidth) => PrintStateLines(width, height, _print, xColorWidth);
+        public IEnumerable<string> PrintStateLines(int width, int height, Func<T, string> getStr, int xColorWidth)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                _sb.Clear();
+                int py = y;
+                int start = py * _width;
+                for (int x = 0; x < width; x++)
+                {
+                    if (x % xColorWidth == 0)
+                        _sb.Append(TilemapPrinter.GetColor(x / xColorWidth));
+                    _sb.Append(getStr(_board(start + x)));
+                }
+                yield return _sb.ToString();
+            }
+        }
+
+    }
 }

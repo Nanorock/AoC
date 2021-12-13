@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace AdventOfCode_2021
 {
-    internal class AoC4 : AdventOfCode
+    internal class AoCBingo4 : AdventOfCode
     {
         const int BoardStartLine = 2;
 

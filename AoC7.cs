@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace AdventOfCode_2021
 {
-    class AoC7 : AdventOfCode
+    class AoCFindFuel7 : AdventOfCode
     {
         int[] _crabs;
         int _minPos = int.MaxValue, _maxPos = int.MinValue;

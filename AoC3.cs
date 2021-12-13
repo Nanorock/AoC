@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace AdventOfCode_2021
 {
-    internal class AoC3 : AdventOfCode
+    internal class AoCRateAndComsumption3 : AdventOfCode
     {
         int _gammaRate, _epsilonRate;
         int PowerConsumption => _gammaRate * _epsilonRate;

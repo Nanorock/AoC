@@ -2,7 +2,7 @@
 
 namespace AdventOfCode_2021
 {
-    class AoC2 : AdventOfCode
+    class AoCNavigation2 : AdventOfCode
     {
         int _forward = 0;
         int _depth = 0;

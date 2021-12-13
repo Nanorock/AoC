@@ -2,7 +2,7 @@
 
 namespace AdventOfCode_2021
 {
-    class AoC5 : AdventOfCode
+    class AoCBoardDrawing5 : AdventOfCode
     {
         Line[] _lines;
         Board _board;
