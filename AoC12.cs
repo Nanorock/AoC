@@ -7,7 +7,7 @@ namespace AdventOfCode_2021
     class AoC12 : AdventOfCode
     {
         Cave _start;
-        public override void Start() { _start = BuildCaveMap(); }
+        public override void Init() { _start = BuildCaveMap(); }
         public override void Run1() { }
         public override void Run2() { Run(); }
         void Run()

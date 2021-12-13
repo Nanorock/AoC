@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace AdventOfCode_2021
@@ -10,40 +12,64 @@ namespace AdventOfCode_2021
     {
         static void Main(string[] args)
         {
-            Run(13, false, ERunPart.Both);
+            RunLatest();
+            //Run(13);
             Console.ReadKey();
         }
-
-        static void Run(int day, bool example, ERunPart part)
+        
+        static void RunLatest(bool example = false, ERunPart runPart = ERunPart.Both) { Run(AdventOfCode.LatestDay(), example, runPart); }
+        static void Run(int day, bool example = false, ERunPart runPart = ERunPart.Both)
         {
-            var aocType = Type.GetType($"AdventOfCode_2021.AoC{day}");
-            if (aocType == null)
-            {
+            var aoc = AdventOfCode.Create(day, example);
+            if (aoc == null) {
                 Console.WriteLine($"No aoc class for day {day}");
                 return;
             }
-            var aoc = Activator.CreateInstance(aocType) as AdventOfCode;
-            if(example) aoc.SetInput(true);
-            aoc.Start();
-            if(part != ERunPart.Part2)
+            Run(aoc, runPart);
+        }
+        static void Run(AdventOfCode aoc, ERunPart runPart = ERunPart.Both)
+        {
+            aoc.Init();
+            if (runPart != ERunPart.Part2)
                 aoc.Run1();
-            if (part != ERunPart.Part1)
+            if (runPart != ERunPart.Part1)
                 aoc.Run2();
         }
     }
-
-    enum ERunPart
-    {
-        Both,
-        Part1,
-        Part2
-    }
+    enum ERunPart { Both, Part1, Part2 }
     abstract class AdventOfCode
     {
-        protected string[] inputFile;
+        static readonly Dictionary<int, Type> AocTypes = new Dictionary<int, Type>();
+        public static int LatestDay()
+        {
+            var types = Assembly.GetCallingAssembly().GetTypes();
+            int latestDay = 0;
+            for (int i = 0; i < types.Length; i++)
+            {
+                if (types[i].BaseType != typeof(AdventOfCode)) continue;
+                var day = int.Parse(new string(types[i].Name.Where(char.IsDigit).ToArray()));
+                AocTypes[day] = types[i];
+                if (day > latestDay)
+                    latestDay = day;
+            }
+            return latestDay;
+        }
+        public static AdventOfCode Create(int aocDay, bool example)
+        {
+            if(!AocTypes.TryGetValue(aocDay, out var aocType))
+                AocTypes[aocDay] = aocType = Type.GetType($"AdventOfCode_2021.AoC{aocDay}");
+            if (aocType == null) return null;
+            return Create(aocType, example);
+        }
+        static AdventOfCode Create(Type aocType, bool example)
+        {
+            var aoc = Activator.CreateInstance(aocType) as AdventOfCode;
+            aoc.SetInput(example);
+            return aoc;
+        }
 
-        public AdventOfCode() { SetInput(); }
-        public void SetInput(bool example = false)
+        protected string[] inputFile;
+        void SetInput(bool example = false)
         {
             string number = "";
             string name = GetType().Name;
@@ -57,67 +83,11 @@ namespace AdventOfCode_2021
         }
 
 
-        public virtual void Start() { }
+        public virtual void Init() { }
         public virtual void Run1() { }
         public virtual void Run2() { }
 
-        protected void WriteLine(string line)
-        {
-            Console.WriteLine(line);
-        }
-
-        protected void Wait()
-        {
-            Console.ReadKey();
-        }
-    }
-
-    public static class HashCache<T>
-    {
-        public static HashSet<T> Value = new HashSet<T>();
-    }
-    public static class ListEx
-    {
-        
-        public static void Intersect<T>(this List<T> list, List<T> values)
-        {
-            var hash = HashCache<T>.Value;
-            for (int i = 0; i < values.Count; i++)
-                hash.Add(values[i]);
-
-            for (int i = list.Count - 1; i >= 0; i--)
-                if(!hash.Remove(list[i]))
-                    list.RemoveAt(i);
-
-            hash.Clear();
-        }
-        public static void Intersect<T>(this List<T> list, IEnumerable<T> values)
-        {
-            var hash = HashCache<T>.Value;
-            foreach(var v in values)
-                hash.Add(v);
-
-            for (int i = list.Count - 1; i >= 0; i--)
-                if (!hash.Remove(list[i]))
-                    list.RemoveAt(i);
-
-            hash.Clear();
-        }
-    }
-
-    public static class EnumerableExt
-    {
-        static StringBuilder _sb = new StringBuilder();
-        public static string ToString<T>(this IEnumerable<T> list, char separator)
-        {
-            _sb.Clear();
-            foreach (var t in list)
-            {
-                _sb.Append(t.ToString());
-                _sb.Append(separator);
-            }
-            var ret = _sb.ToString();
-            return ret.Substring(0, ret.Length - 1);
-        }
+        protected static void WriteLine(string line) => Console.WriteLine(line);
+        protected static void Wait() => Console.ReadKey();
     }
 }

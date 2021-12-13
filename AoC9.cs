@@ -8,7 +8,7 @@ namespace AdventOfCode_2021
     {
         private Tilemap tileMap;
 
-        public override void Start()
+        public override void Init()
         {
             tileMap = new Tilemap(inputFile);
         }
@@ -20,9 +20,9 @@ namespace AdventOfCode_2021
             for (int i = 0; i < tileMap.Size; i++)
             {
                 int local = tileMap[i];
-                int neighborCount = tileMap.Get4Neighbors(i, out var fourNeighbors);
+                using var fourNeighbors = tileMap.Get4Neighbors(i);
                 bool lower = true;
-                for (int j = 0; j < neighborCount; j++) {
+                for (int j = 0; j < fourNeighbors.Length; j++) {
                     if (tileMap[fourNeighbors[j]] <= local) {
                         lower = false;
                         break;
@@ -54,7 +54,7 @@ namespace AdventOfCode_2021
             
             for (int i = 0; i < _lowPoints.Count; i++)
             {
-                int basinSize = tileMap.BFS(_lowPoints[i], height => height < 9);
+                int basinSize = tileMap.BFS_4(_lowPoints[i], height => height < 9);
                 StoreLargestBasins(basinSize);
             }
 

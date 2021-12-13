@@ -10,7 +10,7 @@ namespace AdventOfCode_2021
 
         int[] _inputNumbers;
         readonly List<Board> _boards = new List<Board>();
-        public override void Start()
+        public override void Init()
         {
             _inputNumbers = inputFile[0].Split(',').Select(int.Parse).ToArray();
             int boardReadLine = 2;

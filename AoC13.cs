@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace AdventOfCode_2021
@@ -9,7 +10,7 @@ namespace AdventOfCode_2021
         List<(bool horizontal, int coord)> _folds;
         List<(int x, int y)> _coords;
         int _maxX = 0, _maxY = 0;
-        public override void Start()
+        public override void Init()
         {
             _coords = new List<(int, int)>();
             void ReadCoords(string input)
@@ -56,14 +57,13 @@ namespace AdventOfCode_2021
             for (int i = 0; i < _coords.Count; i++)
             {
                 var (x, y) = _coords[i];
-                int id = _paper.GetId(x, y);
-                _paper[id] = 1;
+                _paper.Set(x, y, 1);
             }
         }
-        
 
 
-        public void Run()
+
+        void Run()
         {
             int width = _paper.Width;
             int height = _paper.Height;
@@ -83,7 +83,10 @@ namespace AdventOfCode_2021
                 }
             }
             sw.Stop();
-            WriteLine(_paper.PrintState(width, height));
+
+            foreach(var line in _paper.PrintStateLines(width, height, 5))
+                ColorConsole.PrintLine(line);
+            //WriteLine(_paper.PrintState(width, height));
             WriteLine($"After fold, dot count:{_paper.Count(x=>x>0)} in {sw.Elapsed.TotalMilliseconds}ms");
         }
     }
