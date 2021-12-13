@@ -1,0 +1,8 @@
+[Bb]in/
+[Oo]bj/
+[Pp]roperties/
+.vs/
+/AoC2021.csproj
+/AoC2021.sln
+/AoC2021.sln.DotSettings.user
+/App.config
