@@ -35,6 +35,10 @@ namespace AdventOfCode_2021
 
             hash.Clear();
         }
+
+        public static void Reset<T>(this List<T> list, IEnumerable<T> values)
+        {
+        }
     }
     public static class EnumerableExt
     {

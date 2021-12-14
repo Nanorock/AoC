@@ -16,7 +16,6 @@ namespace AdventOfCode_2021
             //RunLatest();
             WatchRunAll();
             Console.ReadKey();
-            
         }
 
         static void WatchRunAll()
