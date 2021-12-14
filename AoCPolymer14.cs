@@ -59,6 +59,7 @@ namespace AdventOfCode_2021
             ResetChars();
             _templatePairCounts.Clear();
             var input = inputFile[0];
+            AddChar(input[0]);
             for (int i = 1; i < input.Length; i++)
             {
                 AddChar(input[i]);
