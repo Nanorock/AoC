@@ -6,7 +6,6 @@ namespace AdventOfCode_2021
     class AoCFindFuel7 : AdventOfCode
     {
         int[] _crabs;
-        int _minPos = int.MaxValue, _maxPos = int.MinValue;
         public override void Run1() { }
         public override void Run2()
         {

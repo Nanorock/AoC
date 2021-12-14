@@ -42,7 +42,7 @@ namespace AdventOfCode_2021
             foreach(var templatePair in _templatePairCounts)
             {
                 var pair = templatePair.Key;
-                var pairCount = _templatePairCounts[pair];
+                var pairCount = templatePair.Value;
                 if (!_insertions.TryGetValue(pair, out var insertChar)) continue;
                 AddChar(insertChar, pairCount);
                 AddPair(_pairLatest, (pair.Item1, insertChar), pairCount);
