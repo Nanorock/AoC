@@ -27,7 +27,6 @@ namespace AdventOfCode_2021
                     ++inc;
 
             Console.WriteLine($"Answer is {inc}");
-            Console.ReadKey();
         }
 
         

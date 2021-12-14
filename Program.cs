@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -12,9 +13,30 @@ namespace AdventOfCode_2021
     {
         static void Main(string[] args)
         {
-            RunLatest();
-            //Run(13);
+            //RunLatest();
+            WatchRunAll();
             Console.ReadKey();
+            
+        }
+
+        static void WatchRunAll()
+        {
+            double totalTime = 0;
+            for (int i = 1; i <= AdventOfCode.LatestDay(); i++)
+                totalTime+=WatchRun(i);
+            ColorConsole.RainbowLine($"########################");
+            ColorConsole.RainbowLine($"###TOTAL TIME:{totalTime:F2}ms###");
+            ColorConsole.RainbowLine($"########################");
+        }
+        static double WatchRun(int day)
+        {
+            ColorConsole.PrintLine($"<Blue>Running day {day}");
+            var sw = Stopwatch.StartNew();
+            Run(day);
+            sw.Stop();
+            ColorConsole.PrintLine($"<Blue>Ran in <Red>{sw.Elapsed.TotalMilliseconds}ms");
+            Console.WriteLine();
+            return sw.Elapsed.TotalMilliseconds;
         }
         
         static void RunLatest(bool example = false, ERunPart runPart = ERunPart.Both) { Run(AdventOfCode.LatestDay(), example, runPart); }
@@ -89,6 +111,5 @@ namespace AdventOfCode_2021
         public virtual void Run2() { }
 
         protected static void WriteLine(string line) => Console.WriteLine(line);
-        protected static void Wait() => Console.ReadKey();
     }
 }

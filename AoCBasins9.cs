@@ -36,22 +36,23 @@ namespace AdventOfCode_2021
             }
             WriteLine($"Low point result is {result}");
         }
+
+        int[] _largestBasins = { int.MinValue, int.MinValue, int.MinValue };
+        int _minBasin = int.MinValue;
+        void StoreLargestBasins(int size)
+        {
+            if (size <= _minBasin) return;
+            for (int j = 0; j < _largestBasins.Length; j++)
+            {
+                if (_largestBasins[j] != _minBasin) continue;
+                _largestBasins[j] = size;
+                _minBasin = _largestBasins.Min();
+                return;
+            }
+        }
+
         public override void Run2()
         {
-            int[] largestBasins = {int.MinValue, int.MinValue, int.MinValue};
-            int minBasin = int.MinValue;
-            void StoreLargestBasins(int size)
-            {
-                if (size <= minBasin) return;
-                for (int j = 0; j < largestBasins.Length; j++)
-                {
-                    if (largestBasins[j] != minBasin) continue;
-                    largestBasins[j] = size;
-                    minBasin = largestBasins.Min();
-                    return;
-                }
-            }
-            
             for (int i = 0; i < _lowPoints.Count; i++)
             {
                 int basinSize = tileMap.BFS_4(_lowPoints[i], height => height < 9);
@@ -59,8 +60,8 @@ namespace AdventOfCode_2021
             }
 
             int result = 1;
-            for (int j = 0; j < largestBasins.Length; j++)
-                result *= largestBasins[j];
+            for (int j = 0; j < _largestBasins.Length; j++)
+                result *= _largestBasins[j];
             
             WriteLine($"Basin result is {result}");
         }

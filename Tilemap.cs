@@ -82,9 +82,9 @@ namespace AdventOfCode_2021
         readonly HashSet<int> _bfsVisited = new HashSet<int>();
         readonly Queue<int> _bfsSearch = new Queue<int>();
 
-        public int BFS_4(int start, Func<int, bool> expansion, List<int> result = null) => BFS(start, expansion, Get4Neighbors, result);
-        public int BFS_8(int start, Func<int, bool> expansion, List<int> result = null) => BFS(start, expansion, Get8Neighbors, result);
-        int BFS(int start, Func<int, bool> expansion, Func<int, Neighbors> getNeighbors, List<int> result = null)
+        public int BFS_4(int start, Func<T, bool> expansion, List<int> result = null) => BFS(start, expansion, Get4Neighbors, result);
+        public int BFS_8(int start, Func<T, bool> expansion, List<int> result = null) => BFS(start, expansion, Get8Neighbors, result);
+        int BFS(int start, Func<T, bool> expansion, Func<int, Neighbors> getNeighbors, List<int> result = null)
         {
             _bfsVisited.Clear();
             _bfsSearch.Clear();
@@ -102,7 +102,8 @@ namespace AdventOfCode_2021
                 {
                     int neighId = neighbors[i];
                     if (!_bfsVisited.Add(neighId)) continue;
-                    if (expansion(neighId))
+                    var value = _board[neighId];
+                    if (expansion(value))
                         _bfsSearch.Enqueue(neighId);
                 }
             }
@@ -135,7 +136,7 @@ namespace AdventOfCode_2021
                 int neighborId = GetId(x + xOffsets[i], y + yOffsets[i]);
                 if (neighborId >= 0) neighborSet[++valid] = neighborId;
             }
-            neighborSet.SetLength(valid);
+            neighborSet.SetLength(valid+1);
             return neighborSet;
         }
 
@@ -188,16 +189,16 @@ namespace AdventOfCode_2021
 
         static readonly Stack<int[]> Pool4 = new Stack<int[]>();
         static readonly Stack<int[]> Pool8 = new Stack<int[]>();
-        public static Neighbors Get4() => new Neighbors(Pool4);
-        public static Neighbors Get8() => new Neighbors(Pool8);
+        public static Neighbors Get4() => new Neighbors(Pool4,4);
+        public static Neighbors Get8() => new Neighbors(Pool8,8);
 
         int[] _value;
         Stack<int[]> _pool;
-        Neighbors(Stack<int[]> pool)
+        Neighbors(Stack<int[]> pool, int size)
         {
             _pool = pool;
-            _value = pool.Count == 0 ? new int[8] : pool.Pop();
-            _length = 8;
+            _value = pool.Count == 0 ? new int[size] : pool.Pop();
+            _length = size;
         }
         public void Dispose()
         {
@@ -221,7 +222,7 @@ namespace AdventOfCode_2021
     public struct TilemapPrinter
     {
         static readonly string[] _colors = { "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta" };
-        public static string GetColor(int id) => "{" + _colors[id % _colors.Length] + "}";
+        public static string GetColor(int id) => ColorConsole.GetBlock(_colors[id % _colors.Length]);
     }
     public struct TilemapPrinter<T>
     {

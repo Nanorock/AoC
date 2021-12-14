@@ -37,8 +37,6 @@ namespace AdventOfCode_2021
             WriteLine($"Incorrect char ending score:{errorScore}");
             completionScores.Sort();
             WriteLine($"AutoCompletion score:{completionScores[completionScores.Count / 2]}");
-            
-            Wait();
         }
         readonly Dictionary<char, char> ToClosings = new Dictionary<char, char>() { { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }, };
         readonly Dictionary<char, int> ToErrorScore = new Dictionary<char, int>() { { ')', 3 }, { ']', 57}, { '}', 1197 }, { '>', 25137 }, };

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace AdventOfCode_2021
@@ -51,23 +52,64 @@ namespace AdventOfCode_2021
         }
     }
 
+    static class StringExt
+    {
+        public static string RemoveChars(this string input, string remove)
+        {
+            string ret = input;
+            for (int i = 0; i < remove.Length; i++)
+                ret = ret.RemoveChar(remove[i]);
+            return ret;
+        }
+        public static string RemoveChar(this string input, char remove)
+        {
+            for (int i = input.Length - 1; i >= 0; i--)
+                if (input[i] == remove)
+                    return input.Remove(i, 1);
+            return input;
+        }
+        public static string OrderAlpha(this string input) => string.Concat(input.OrderBy(c => c));
+
+        public static bool Has(this string input, HashSet<char> chars)
+        {
+            int match = 0;
+            for (int i = 0; i < input.Length; i++)
+                if (chars.Contains(input[i]))
+                    ++match;
+            return match == chars.Count;
+        }
+        public static bool Has(this string input, string other)
+        {
+            int match = 0;
+            for (int i = 0; i < other.Length; i++)
+                if (input.Contains(other[i]))
+                    ++match;
+            return match == other.Length;
+        }
+    }
+
     public static class ColorConsole
     {
+        static readonly string[] _rainbowColors = { "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta" };
+        public static string GetBlock(string color) => $"<{color}>";
         public static void PrintLine(string formatted)
         {
             if (string.IsNullOrEmpty(formatted)) return;
-            int colorCodeStart = formatted.IndexOf('{');
+            int colorCodeStart = formatted.IndexOf('<');
             if (colorCodeStart < 0)
             {
                 PrintDirectLine(formatted);
                 return;
             }
-            int colorCodeEnd = formatted.IndexOf('}');
+            int colorCodeEnd = formatted.IndexOf('>');
             if (colorCodeEnd < 0)
             {
                 PrintDirectLine(formatted);
                 return;
             }
+
+            if (colorCodeStart > 0)
+                PrintDirect(formatted.Substring(0, colorCodeStart));
 
             while (colorCodeStart >= 0 && colorCodeEnd >= 0)
             {
@@ -75,12 +117,22 @@ namespace AdventOfCode_2021
                 Console.ForegroundColor = StrColors[colorStr];
                 formatted = formatted.Substring(colorCodeEnd + 1);
                 
-                colorCodeStart = formatted.IndexOf('{');
-                colorCodeEnd = formatted.IndexOf('}');
+                colorCodeStart = formatted.IndexOf('<');
+                colorCodeEnd = formatted.IndexOf('>');
                 PrintDirect(colorCodeStart < 0 ? formatted : formatted.Substring(0, colorCodeStart));
             }
             Console.WriteLine();
             Console.ResetColor();
+        }
+
+        static int _rainbows;
+        public static void RainbowLine(string raw)
+        {
+            int start = _rainbows += 2;
+            string formated = "";
+            for (int i = 0; i < raw.Length; i++)
+                formated += GetBlock(_rainbowColors[(start + i) % _rainbowColors.Length]) + raw[i];
+            PrintLine(formated);
         }
 
         static void PrintDirect(string direct) { Console.Write(direct); }

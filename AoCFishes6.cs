@@ -12,7 +12,6 @@ namespace AdventOfCode_2021
             int reproductionScope = 256;
             RunReproduction(reproductionScope);
             WriteLine($"Fishes after {reproductionScope} days : {CountFishes()}");
-            Console.ReadKey();
         }
 
         const int DefaultNewReproductionTimer = 8;

@@ -7,30 +7,21 @@ namespace AdventOfCode_2021
     class AoCFolding13 : AdventOfCode
     {
         Tilemap _paper;
-        List<(bool horizontal, int coord)> _folds;
-        List<(int x, int y)> _coords;
+        List<(bool horizontal, int coord)> _folds = new List<(bool horizontal, int coord)>();
+        List<(int x, int y)> _coords = new List<(int x, int y)>();
         int _maxX = 0, _maxY = 0;
         public override void Init()
         {
-            _coords = new List<(int, int)>();
-            void ReadCoords(string input)
-            {
-                var coordsStr = input.Split(',');
-                var x = int.Parse(coordsStr[0]);
-                if (x > _maxX) _maxX = x;
-                var y = int.Parse(coordsStr[1]);
-                if (y > _maxY) _maxY = y;
-                _coords.Add((x,y));
-            }
-            _folds = new List<(bool, int)>();
-            void ReadFolds(string input)
-            {
-                int eqIndex = input.IndexOf('=');
-                bool horizontal = input[eqIndex - 1] == 'y';
-                int number = int.Parse(input.Substring(eqIndex + 1));
-                _folds.Add((horizontal, number));
-            }
+            var setup = Stopwatch.StartNew();
+            SetBoard();
+            setup.Stop();
+            WriteLine($"Setup in {setup.Elapsed.TotalMilliseconds}ms");
 
+            Run();
+        }
+
+        void SetBoard()
+        {
             bool readFolds = false;
             for (int i = 0; i < inputFile.Length; i++)
             {
@@ -40,19 +31,12 @@ namespace AdventOfCode_2021
                     readFolds = true;
                     continue;
                 }
-                if(!readFolds)
+                if (!readFolds)
                     ReadCoords(inputFile[i]);
-                else 
+                else
                     ReadFolds(inputFile[i]);
             }
 
-            SetBoard();
-
-            Run();
-        }
-
-        void SetBoard()
-        {
             _paper = new Tilemap(_maxX + 1, _maxY + 1);
             for (int i = 0; i < _coords.Count; i++)
             {
@@ -60,8 +44,22 @@ namespace AdventOfCode_2021
                 _paper.Set(x, y, 1);
             }
         }
-
-
+        void ReadCoords(string input)
+        {
+            var coordsStr = input.Split(',');
+            var x = int.Parse(coordsStr[0]);
+            if (x > _maxX) _maxX = x;
+            var y = int.Parse(coordsStr[1]);
+            if (y > _maxY) _maxY = y;
+            _coords.Add((x, y));
+        }
+        void ReadFolds(string input)
+        {
+            int eqIndex = input.IndexOf('=');
+            bool horizontal = input[eqIndex - 1] == 'y';
+            int number = int.Parse(input.Substring(eqIndex + 1));
+            _folds.Add((horizontal, number));
+        }
 
         void Run()
         {
@@ -84,11 +82,11 @@ namespace AdventOfCode_2021
             }
             sw.Stop();
 
-            var printer = _paper.GetPrinter();
-            foreach (var line in printer.PrintStateLines(width, height, 5))
-                ColorConsole.PrintLine(line);
-            //WriteLine(_paper.PrintState(width, height));
-            WriteLine($"After fold, dot count:{_paper.Count(x=>x>0)} in {sw.Elapsed.TotalMilliseconds}ms");
+            var swdraw = Stopwatch.StartNew();
+            Console.WriteLine(_paper.GetPrinter().PrintState(width, height));
+            swdraw.Stop();
+
+            WriteLine($"After fold, dot count:{_paper.Count(x=>x>0)} in {sw.Elapsed.TotalMilliseconds}ms, draw in {swdraw.Elapsed.TotalMilliseconds}ms");
         }
     }
 }

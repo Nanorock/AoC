@@ -29,7 +29,6 @@ namespace AdventOfCode_2021
             }
 
             WriteLine($"Overlaps:{_board.CountOverlaps()}");
-            Console.ReadKey();
         }
     }
 

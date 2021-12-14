@@ -66,7 +66,6 @@ namespace AdventOfCode_2021
             WriteLine($"Input Value {input}");
             WriteLine($"Unchecked Sum {sum}");
             WriteLine($"Result {sum * input}");
-            Console.ReadKey();
         }
         
         struct BoardValue
@@ -78,11 +77,13 @@ namespace AdventOfCode_2021
         class Board
         {
             public const int BoardSize = 5;
-            BoardValue[] Values = new BoardValue[BoardSize * BoardSize];
-            HashSet<int> _values = new HashSet<int>();
+            readonly BaseTilemap<BoardValue> _board;
+            readonly HashSet<int> _values = new HashSet<int>();
 
             public Board(string[] input, int index)
             {
+                _board = new BaseTilemap<BoardValue>(BoardSize, BoardSize);
+
                 int startRead = BoardStartLine + index * 6;
                 for (int row = 0; row < BoardSize; row++)
                 {
@@ -91,29 +92,21 @@ namespace AdventOfCode_2021
                     for (int column = 0; column < BoardSize; column++)
                     {
                         int val = int.Parse(chars[column]);
-                        Values[Index(column, row)] = new BoardValue(val);
+                        _board.Set(column, row, new BoardValue(val));
                         _values.Add(val);
                     }
                 }
             }
 
-            int Index(int column, int row) => column + row * BoardSize;
-            void ToXY(int index, out int column, out int row)
-            {
-                row = index / BoardSize;
-                column = index - row * BoardSize;
-            }
-
             public bool SetNumberAndCheckWin(int val)
             {
                 if (!_values.Contains(val)) return false;
-
-                for (int i = 0; i < Values.Length; i++)
+                for (int i = 0; i < _board.Size; i++)
                 {
-                    if (Values[i].Value == val)
+                    if (_board[i].Value == val)
                     {
-                        Values[i] = new BoardValue(Values[i].Value, true);
-                        ToXY(i, out var column, out var row);
+                        _board[i] = new BoardValue(_board[i].Value, true);
+                        _board.GetXY(i, out var column, out var row);
                         if (CheckWinColumn(column) || CheckWinRow(row))
                             return true;
                     }
@@ -124,14 +117,14 @@ namespace AdventOfCode_2021
             bool CheckWinColumn(int column)
             {
                 for (int row = 0; row < BoardSize; row++)
-                    if (!Values[Index(column, row)].Checked)
+                    if (!_board.Get(column, row).Checked)
                         return false;
                 return true;
             }
             bool CheckWinRow(int row)
             {
                 for (int column = 0; column < BoardSize; column++)
-                    if (!Values[Index(column, row)].Checked)
+                    if (!_board.Get(column, row).Checked)
                         return false;
                 return true;
             }
@@ -139,9 +132,9 @@ namespace AdventOfCode_2021
             public int SumCheck(bool @checked = false)
             {
                 int sum = 0;
-                for (int i = 0; i < Values.Length; i++)
-                    if (Values[i].Checked == @checked)
-                        sum += Values[i].Value;
+                for (int i = 0; i < _board.Size; i++)
+                    if (_board[i].Checked == @checked)
+                        sum += _board[i].Value;
                 return sum;
             }
         }

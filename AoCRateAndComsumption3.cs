@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace AdventOfCode_2021
 {
-    internal class AoCRateAndComsumption3 : AdventOfCode
+    class AoCRateAndComsumption3 : AdventOfCode
     {
         int _gammaRate, _epsilonRate;
         int PowerConsumption => _gammaRate * _epsilonRate;
@@ -53,8 +53,6 @@ namespace AdventOfCode_2021
             Console.WriteLine($"OxygenGeneratorRating {_oxygenGeneratorRating}");
             Console.WriteLine($"CO2ScrubberRating {_co2ScrubberRating}");
             Console.WriteLine($"LifeSupportRating is {LifeSupportRating}");
-
-            Console.ReadKey();
         }
 
         void FindRating(int[] allValues, Func<float, bool> passCriteria, ref int outputValue)

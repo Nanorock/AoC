@@ -18,7 +18,6 @@ namespace AdventOfCode_2021
 
             Console.WriteLine($"Forward:{_forward}, depth:{_depth}");
             Console.WriteLine($"Answer is {_forward * _depth}");
-            Console.ReadKey();
         }
         void Parse(string action, int value)
         {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace AdventOfCode_2021
 {
@@ -30,7 +29,6 @@ namespace AdventOfCode_2021
             for (int i = 0; i < inputFile.Length; i++)
                 totalResult += Puzzle.Decode(inputFile[i]);
             WriteLine($"Result:{totalResult}");
-            Wait();
         }
 
         class Puzzle
@@ -121,41 +119,6 @@ namespace AdventOfCode_2021
             List<string> _fiveDigits; List<string> FiveDigits => _fiveDigits ??= new List<string> {"acdeg", "acdfg", "abdfg"};
             List<string> _sixDigits;  List<string> SixDigits => _sixDigits ??= new List<string> { "abcefg", "abdefg", "abcdfg" };
             string[] Numbers = { "abcefg", "cf","acdeg","acdfg", "bcdf","abdfg","abdefg","acf","abcdefg","abcdfg" };
-        }
-    }
-    static class StringExt
-    {
-        public static string RemoveChars(this string input, string remove)
-        {
-            string ret = input;
-            for (int i = 0; i < remove.Length; i++)
-                ret = ret.RemoveChar(remove[i]);
-            return ret;
-        }
-        public static string RemoveChar(this string input, char remove)
-        {
-            for (int i = input.Length - 1; i >= 0; i--)
-                if (input[i] == remove)
-                    return input.Remove(i, 1);
-            return input;
-        }
-        public static string OrderAlpha(this string input) => string.Concat(input.OrderBy(c => c));
-
-        public static bool Has(this string input, HashSet<char> chars)
-        {
-            int match = 0;
-            for (int i = 0; i < input.Length; i++)
-                if (chars.Contains(input[i]))
-                    ++match;
-            return match == chars.Count;
-        }
-        public static bool Has(this string input, string other)
-        {
-            int match = 0;
-            for (int i = 0; i < other.Length; i++)
-                if (input.Contains(other[i]))
-                    ++match;
-            return match == other.Length;
         }
     }
 }
