@@ -13,7 +13,7 @@ namespace AdventOfCode_2021
     {
         static void Main(string[] args)
         {
-            //RunLatest();
+            //RunLatest(false);
             WatchRunAll();
             Console.ReadKey();
         }

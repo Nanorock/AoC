@@ -55,7 +55,7 @@ namespace AdventOfCode_2021
         {
             for (int i = 0; i < _lowPoints.Count; i++)
             {
-                int basinSize = tileMap.BFS_4(_lowPoints[i], height => height < 9);
+                int basinSize = tileMap.BFS_4(_lowPoints[i], (id,height) => height < 9);
                 StoreLargestBasins(basinSize);
             }
 

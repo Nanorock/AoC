@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace AdventOfCode_2021
@@ -8,6 +9,7 @@ namespace AdventOfCode_2021
     {
         public Tilemap(string[] inputFile):base(inputFile, c => c-'0') { }
         public Tilemap(int width, int height):base(width,height) { }
+        public Tilemap(Tilemap copy) : base(copy) { }
         
         public void FoldHorizontal(int yLine, int maxWidth, int maxHeight)
         {
@@ -47,7 +49,10 @@ namespace AdventOfCode_2021
         }
 
         public TilemapPrinter<int> GetPrinter() => new TilemapPrinter<int>(Get, GetState, Width, Height);
-        string GetState(int id) => id > 0 ? id.ToString() : " ";
+        string GetState(int id, int value) => value > 0 ? value.ToString() : " ";
+
+        protected override int GetGScore(int value) => value;
+
     }
     public class BaseTilemap<T>
     {
@@ -65,6 +70,12 @@ namespace AdventOfCode_2021
             _height = height;
             _board = new T[_width * _height];
         }
+
+        public BaseTilemap(BaseTilemap<T> copy) : this(copy.Width, copy.Height)
+        {
+            Array.Copy(copy._board, _board, _board.Length);
+        }
+
         void Set(string[] inputFile, Func<char,T> get)
         {
             _width = inputFile[0].Length;
@@ -82,9 +93,9 @@ namespace AdventOfCode_2021
         readonly HashSet<int> _bfsVisited = new HashSet<int>();
         readonly Queue<int> _bfsSearch = new Queue<int>();
 
-        public int BFS_4(int start, Func<T, bool> expansion, List<int> result = null) => BFS(start, expansion, Get4Neighbors, result);
-        public int BFS_8(int start, Func<T, bool> expansion, List<int> result = null) => BFS(start, expansion, Get8Neighbors, result);
-        int BFS(int start, Func<T, bool> expansion, Func<int, Neighbors> getNeighbors, List<int> result = null)
+        public int BFS_4(int start, Func<int, T, bool> expansion, List<int> result = null) => BFS(start, expansion, Get4Neighbors, result);
+        public int BFS_8(int start, Func<int, T, bool> expansion, List<int> result = null) => BFS(start, expansion, Get8Neighbors, result);
+        int BFS(int start, Func<int, T, bool> expansion, Func<int, Neighbors> getNeighbors, List<int> result = null)
         {
             _bfsVisited.Clear();
             _bfsSearch.Clear();
@@ -103,14 +114,14 @@ namespace AdventOfCode_2021
                     int neighId = neighbors[i];
                     if (!_bfsVisited.Add(neighId)) continue;
                     var value = _board[neighId];
-                    if (expansion(value))
+                    if (expansion(neighId, value))
                         _bfsSearch.Enqueue(neighId);
                 }
             }
 
             return results;
         }
-
+        
         public int GetId(int x, int y)
         {
             if (x < 0 || y < 0 || x >= _width || y >= _height)
@@ -123,13 +134,13 @@ namespace AdventOfCode_2021
             x = id - y * _width;
         }
 
-        
-        public Neighbors Get4Neighbors(int id) => GetNeighbors(id, Neighbors.X4Offset, Neighbors.Y4Offset, Neighbors.Get4);
-        public Neighbors Get8Neighbors(int id) => GetNeighbors(id, Neighbors.X8Offset, Neighbors.Y8Offset, Neighbors.Get8);
-        Neighbors GetNeighbors(int id, int[] xOffsets, int[] yOffsets, Func<Neighbors> getNeighbors)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Neighbors Get4Neighbors(int id) => GetNeighbors(id, Neighbors.X4Offset, Neighbors.Y4Offset, Neighbors.Get4());
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Neighbors Get8Neighbors(int id) => GetNeighbors(id, Neighbors.X8Offset, Neighbors.Y8Offset, Neighbors.Get8());
+        Neighbors GetNeighbors(int id, int[] xOffsets, int[] yOffsets, Neighbors neighborSet)
         {
             GetXY(id, out var x, out var y);
-            var neighborSet = getNeighbors();
             int valid = -1;
             for (int i = 0; i < neighborSet.Length; i++)
             {
@@ -141,7 +152,7 @@ namespace AdventOfCode_2021
         }
 
 
-        public TilemapPrinter<T> GetPrinter(Func<T, string> print) => new TilemapPrinter<T>(Get, print, _width, _height);
+        public TilemapPrinter<T> GetPrinter(Func<int, T, string> print) => new TilemapPrinter<T>(Get, print, _width, _height);
 
         public int Count(Func<T, bool> filter)
         {
@@ -151,8 +162,7 @@ namespace AdventOfCode_2021
                     ++count;
             return count;
         }
-
-
+        
         public T this[int key]
         {
             get => Get(key);
@@ -177,8 +187,122 @@ namespace AdventOfCode_2021
             if (key >= 0 && key < Size)
                 _board[key] = value;
         }
+
+
+        protected virtual int GetGScore(T value)
+        {
+            return value.GetHashCode();
+        }
+
+
+        int[] _gScores;
+        PriorityQueue _priorityQueue;
+        public bool AStar(int start, int goal, List<int> result)
+        {
+            _priorityQueue = _priorityQueue ??=new PriorityQueue();
+            _priorityQueue.Reset();
+            
+            _gScores ??= new int[_board.Length];
+            for (int i = 0; i < _gScores.Length; i++)
+                _gScores[i] = int.MaxValue;
+            _gScores[start] = 0;
+
+            _priorityQueue.Enqueue(start, 0);
+            while (_priorityQueue.TryDequeue(out int lowestScoreId))
+            {
+                if (lowestScoreId == goal)
+                {
+                    GetPathFromGScore(start,lowestScoreId, result);
+                    return true;
+                }
+
+                using var neighbors = Get4Neighbors(lowestScoreId);
+                for (int i = 0; i < neighbors.Length; i++)
+                {
+                    int n = neighbors[i];
+                    var tentativeGScore = _gScores[lowestScoreId] + GetGScore(_board[n]);
+                    if (tentativeGScore >= _gScores[n]) continue;
+                    _gScores[n] = tentativeGScore;
+                    var finalScore = tentativeGScore + GetManhattanDistance(lowestScoreId, goal);
+                    _priorityQueue.Enqueue(n, finalScore);
+                }
+            }
+            return false;
+        }
+        
+        int GetManhattanDistance(int id, int goal)
+        {
+            GetXY(id, out var x1, out var y1);
+            GetXY(goal, out var x2, out var y2);
+            return Math.Abs(x1 - x2) + Math.Abs(y1 - y2);
+        }
+        void GetPathFromGScore(int start, int current, List<int> res)
+        {
+            int prev = current;
+            while (current != start)
+            {
+                res.Add(current);
+                using var neighbors = Get4Neighbors(current);
+                int lowestG = int.MaxValue;
+                int lowestId = -1;
+                for (int i = 0; i < neighbors.Length; i++)
+                {
+                    var nId = neighbors[i];
+                    if (nId == prev) continue;
+                    var g = _gScores[nId];
+                    if (g < lowestG)
+                    {
+                        lowestG = g;
+                        lowestId = nId;
+                    }
+                }
+                prev = current;
+                current = lowestId;
+            }
+            res.Reverse();
+        }
     }
-    
+    class PriorityQueue
+    {
+        readonly List<int> _priorities = new List<int>();
+        readonly Dictionary<int, List<int>> _prioToIds = new Dictionary<int, List<int>>();
+        public void Enqueue(int id, int priority)
+        {
+            if (!_prioToIds.TryGetValue(priority, out var ids))
+            {
+                _prioToIds[priority] = ids = new List<int>();
+                _priorities.Add(priority);
+                _priorities.Sort((a, b) => b.CompareTo(a));
+            }
+            ids.Add(id);
+        }
+        
+        public bool TryDequeue(out int elt)
+        {
+            if (_priorities.Count == 0)
+            {
+                elt = 0;
+                return false;
+            }
+
+            var prio = _priorities[_priorities.Count-1];
+            var ids = _prioToIds[prio];
+            elt = ids[ids.Count - 1];
+            ids.RemoveAt(ids.Count - 1);
+            if (ids.Count == 0)
+            {
+                _priorities.RemoveAt(_priorities.Count-1);
+                _prioToIds.Remove(prio);
+            }
+            return true;
+        }
+
+        public void Reset()
+        {
+            _priorities.Clear();
+            _prioToIds.Clear();
+        }
+    }
     public struct Neighbors : IDisposable
     {
         public static readonly int[] X4Offset = { 0, 1, 0, -1 };
@@ -229,9 +353,9 @@ namespace AdventOfCode_2021
         StringBuilder _sb;
         int _width, _height;
         Func<int, T> _board;
-        Func<T, string> _print;
+        Func<int, T, string> _print;
 
-        public TilemapPrinter(Func<int, T> getter, Func<T, string> print, int width, int height)
+        public TilemapPrinter(Func<int, T> getter, Func<int, T, string> print, int width, int height)
         {
             _sb = new StringBuilder();
             _width = width;
@@ -240,13 +364,13 @@ namespace AdventOfCode_2021
             _print = print;
         }
 
-        public string PrintState(Func<T, string> getStr)
+        public string PrintState(Func<int, T, string> getStr)
         {
             return PrintState(_width, _height, getStr);
         }
 
         public string PrintState(int width, int height, bool inverseY = false) => PrintState(width, height, _print, inverseY);
-        public string PrintState(int width, int height, Func<T, string> getStr, bool inverseY = false)
+        public string PrintState(int width, int height, Func<int, T, string> getStr, bool inverseY = false)
         {
             _sb.Clear();
             for (int y = 0; y < height; y++)
@@ -255,16 +379,19 @@ namespace AdventOfCode_2021
                 if (inverseY) py = height - 1 - y;
                 int start = py * _width;
                 for (int x = 0; x < width; x++)
-                    _sb.Append(getStr(_board(start + x)));
+                    _sb.Append(getStr(start + x, _board(start + x)));
                 _sb.AppendLine();
             }
             return _sb.ToString();
         }
 
 
-
-        public IEnumerable<string> PrintStateLines(int width, int height, int xColorWidth) => PrintStateLines(width, height, _print, xColorWidth);
-        public IEnumerable<string> PrintStateLines(int width, int height, Func<T, string> getStr, int xColorWidth)
+        public IEnumerable<string> PrintStateLines(Func<int, T, string> getStr)
+        {
+            return PrintStateLines(_width, _height, getStr);
+        }
+        public IEnumerable<string> PrintStateLines(int width, int height) => PrintStateLines(width, height, _print);
+        public IEnumerable<string> PrintStateLines(int width, int height, Func<int, T, string> getStr)
         {
             for (int y = 0; y < height; y++)
             {
@@ -273,9 +400,7 @@ namespace AdventOfCode_2021
                 int start = py * _width;
                 for (int x = 0; x < width; x++)
                 {
-                    if (x % xColorWidth == 0)
-                        _sb.Append(TilemapPrinter.GetColor(x / xColorWidth));
-                    _sb.Append(getStr(_board(start + x)));
+                    _sb.Append(getStr(start + x, _board(start + x)));
                 }
                 yield return _sb.ToString();
             }

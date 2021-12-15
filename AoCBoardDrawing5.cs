@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace AdventOfCode_2021
 {
@@ -23,10 +25,7 @@ namespace AdventOfCode_2021
             _board = new Board(max + 1);
 
             for (int i = 0; i < _lines.Length; i++)
-            {
-                var line = _lines[i];
-                _board.Draw(line);
-            }
+                _board.Draw(_lines[i]);
 
             WriteLine($"Overlaps:{_board.CountOverlaps()}");
         }
@@ -43,19 +42,11 @@ namespace AdventOfCode_2021
             _board = new int[_width * _width];
         }
 
-        int Index(int x, int y) => x + y * _width;
-        void ToXY(int index, out int x, out int y)
-        {
-            y = index / _width;
-            x = index - y * _width;
-        }
-
         public void Draw(in Line line)
         {
-            Point p1 = line.P1;
-            Draw(p1);
-
-            Point p2 = line.P2;
+            Point p1 = line.Points[0];
+            ++_board[p1.x + p1.y * _width];
+            ref readonly Point p2 = ref line.Points[1];
             while (p1 != p2)
             {
                 var diffX = p2.x - p1.x;
@@ -65,11 +56,9 @@ namespace AdventOfCode_2021
                 var diffY = p2.y - p1.y;
                 var dy = Math.Sign(diffY);
                 p1.y += dy;
-                Draw(p1);
+                ++_board[p1.x + p1.y * _width];
             }
         }
-
-        public void Draw(in Point p) => ++_board[Index(p.x, p.y)];
 
         public int CountOverlaps()
         {
@@ -107,25 +96,16 @@ namespace AdventOfCode_2021
     struct Line
     {
         public Point[] Points;
-        public Point P1 { get => Points[0]; set => Points[0] = value; }
-        public Point P2 { get => Points[1]; set => Points[1] = value; }
-
         static char[] _separator;
         static char[] Separator => _separator ??= " -> ".ToCharArray();
         public Line(string parse)
         {
             Points = new Point[2];
             var data = parse.Split(Separator, StringSplitOptions.RemoveEmptyEntries);
-            P1 = new Point(data[0]);
-            P2 = new Point(data[1]);
+            Points[0] = new Point(data[0]);
+            Points[1] = new Point(data[1]);
         }
-
-        public bool IsVertical => P1.x == P2.x;
-        public bool IsHorizontal => P1.y == P2.y;
-
-        public int MaxX => P1.x > P2.x ? P1.x : P2.x;
-        public int MaxY => P1.y > P2.y ? P1.y : P2.y;
-        public int MinX => P1.x < P2.x ? P1.x : P2.x;
-        public int MinY => P1.y < P2.y ? P1.y : P2.y;
+        public int MaxX => Points[0].x > Points[1].x ? Points[0].x : Points[1].x;
+        public int MaxY => Points[0].y > Points[1].y ? Points[0].y : Points[1].y;
     }
 }
