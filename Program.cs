@@ -1,11 +1,6 @@
 ﻿
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace AdventOfCode_2021
 {
@@ -15,7 +10,8 @@ namespace AdventOfCode_2021
         {
             //RunLatest(false);
             WatchRunAll();
-            Console.ReadKey();
+            while(true)
+                Console.ReadLine();
         }
 
         static void WatchRunAll()

@@ -23,7 +23,9 @@ namespace AdventOfCode_2021
                 sumCost += _board[aStartPath[i]];
 
             /*var printer = _board.GetPrinter();
-            foreach (var line in printer.PrintStateLines((id, v) => aStartPath.Contains(id) ? $"<Red>{v}" : $"<White>{v}"))
+            foreach (var line in printer.PrintStateLines((id, v) =>
+                aStartPath.Contains(id) ? $"<Green>{v}" :
+                _board.Visited.Contains(id) ? $"<Red>{v}" : $"<White>{v}"))
                 ColorConsole.PrintLine(line);*/
 
             WriteLine($"Path found at cost {sumCost}");
@@ -63,10 +65,25 @@ namespace AdventOfCode_2021
             int sumCost = 0;
             for (int i = 0; i < aStartPath.Count; i++)
                 sumCost += board2[aStartPath[i]];
-            
+
             /*var printer = board2.GetPrinter();
-            foreach (var line in printer.PrintStateLines((id, v) => aStartPath.Contains(id) ? $"<Red>{v}" : $"<White>{v}"))
-                ColorConsole.PrintLine(line);*/
+            int lineY = -1;
+            string hLine = "   ";
+            string fillLine = "---";
+            for (int i = 0; i < board2.Width; i++)
+            {
+                hLine += i.ToString("D2")+"|";
+                fillLine += "---";
+            }
+            Console.WriteLine(hLine);
+            Console.WriteLine(fillLine);
+            foreach (var line in printer.PrintStateLines((id, v) =>
+                aStartPath.Contains(id) ? $"<Green>{v:D2}<White>|" :
+                board2.Visited.Contains(id) ? $"<Red>{v:D2}<White>|" : $"<White>{v:D2}<White>|"))
+            {
+                ColorConsole.PrintLine((++lineY).ToString("D2")+"|"+ line);
+                Console.WriteLine(fillLine);
+            }*/
 
             WriteLine($"Path found at cost {sumCost}");
         }

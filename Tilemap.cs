@@ -135,7 +135,20 @@ namespace AdventOfCode_2021
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Neighbors Get4Neighbors(int id) => GetNeighbors(id, Neighbors.X4Offset, Neighbors.Y4Offset, Neighbors.Get4());
+        public Neighbors Get4Neighbors(int id)
+        {
+            var neighborSet = Neighbors.Get4();
+            GetXY(id, out var x, out var y);
+            int valid = -1;
+            for (int i = 0; i < neighborSet.Length; i++)
+            {
+                int neighborId = GetId(x + Neighbors.X4Offset[i], y + Neighbors.Y4Offset[i]);
+                if (neighborId >= 0) neighborSet[++valid] = neighborId;
+            }
+            neighborSet.SetLength(valid + 1);
+            return neighborSet;
+        }
+            //=> GetNeighbors(id, Neighbors.X4Offset, Neighbors.Y4Offset, Neighbors.Get4());
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Neighbors Get8Neighbors(int id) => GetNeighbors(id, Neighbors.X8Offset, Neighbors.Y8Offset, Neighbors.Get8());
         Neighbors GetNeighbors(int id, int[] xOffsets, int[] yOffsets, Neighbors neighborSet)
@@ -195,17 +208,18 @@ namespace AdventOfCode_2021
         }
 
 
-        int[] _gScores;
+        int[] _costFromStart;
         PriorityQueue _priorityQueue;
         public bool AStar(int start, int goal, List<int> result)
         {
-            _priorityQueue = _priorityQueue ??=new PriorityQueue();
+            _priorityQueue = _priorityQueue ??= new PriorityQueue();
             _priorityQueue.Reset();
             
-            _gScores ??= new int[_board.Length];
-            for (int i = 0; i < _gScores.Length; i++)
-                _gScores[i] = int.MaxValue;
-            _gScores[start] = 0;
+            _costFromStart ??= new int[_board.Length];
+            for (int i = 0; i < _costFromStart.Length; i++)
+                _costFromStart[i] = int.MaxValue;
+            _costFromStart[start] = 0;
+            GetXY(goal, out var x2, out var y2);
 
             _priorityQueue.Enqueue(start, 0);
             while (_priorityQueue.TryDequeue(out int lowestScoreId))
@@ -215,26 +229,21 @@ namespace AdventOfCode_2021
                     GetPathFromGScore(start,lowestScoreId, result);
                     return true;
                 }
-
+                
                 using var neighbors = Get4Neighbors(lowestScoreId);
                 for (int i = 0; i < neighbors.Length; i++)
                 {
                     int n = neighbors[i];
-                    var tentativeGScore = _gScores[lowestScoreId] + GetGScore(_board[n]);
-                    if (tentativeGScore >= _gScores[n]) continue;
-                    _gScores[n] = tentativeGScore;
-                    var finalScore = tentativeGScore + GetManhattanDistance(lowestScoreId, goal);
-                    _priorityQueue.Enqueue(n, finalScore);
+                    var tentativeCost = _costFromStart[lowestScoreId] + GetGScore(_board[n]);
+                    if (tentativeCost >= _costFromStart[n]) continue;
+                    _costFromStart[n] = tentativeCost;
+                    GetXY(lowestScoreId, out var x1, out var y1);
+                    int manhattan= Math.Abs(x1 - x2) + Math.Abs(y1 - y2);
+                    var priority = tentativeCost + manhattan;
+                    _priorityQueue.Enqueue(n, priority);
                 }
             }
             return false;
-        }
-        
-        int GetManhattanDistance(int id, int goal)
-        {
-            GetXY(id, out var x1, out var y1);
-            GetXY(goal, out var x2, out var y2);
-            return Math.Abs(x1 - x2) + Math.Abs(y1 - y2);
         }
         void GetPathFromGScore(int start, int current, List<int> res)
         {
@@ -249,7 +258,7 @@ namespace AdventOfCode_2021
                 {
                     var nId = neighbors[i];
                     if (nId == prev) continue;
-                    var g = _gScores[nId];
+                    var g = _costFromStart[nId];
                     if (g < lowestG)
                     {
                         lowestG = g;
