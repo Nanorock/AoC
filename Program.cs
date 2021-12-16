@@ -25,7 +25,7 @@ namespace AdventOfCode_2021
         }
         static double WatchRun(int day)
         {
-            ColorConsole.PrintLine($"<Blue>Running day {day}");
+            ColorConsole.PrintLine($"<Blue>Running {AdventOfCode.GetName(day)}");
             var sw = Stopwatch.StartNew();
             Run(day);
             sw.Stop();
@@ -56,6 +56,7 @@ namespace AdventOfCode_2021
     enum ERunPart { Both, Part1, Part2 }
     abstract class AdventOfCode
     {
+        static Dictionary<int, string> _aocNames;
         static Dictionary<int, AdventOfCode> _aocTypes;
         static Dictionary<int, AdventOfCode> AoCs
         {
@@ -64,18 +65,21 @@ namespace AdventOfCode_2021
                 if (_aocTypes == null)
                 {
                     _aocTypes = new Dictionary<int, AdventOfCode>();
+                    _aocNames = new Dictionary<int, string>();
                     var types = Assembly.GetCallingAssembly().GetTypes();
                     for (int i = 0; i < types.Length; i++)
                     {
                         if (types[i].BaseType != typeof(AdventOfCode)) continue;
                         var day = int.Parse(new string(types[i].Name.Where(char.IsDigit).ToArray()));
                         AoCs[day] = Activator.CreateInstance(types[i]) as AdventOfCode;
+                        _aocNames[day] = types[i].Name;
                     }
                 }
                 return _aocTypes;
             }
         }
         public static int LatestDay() => AoCs.Select(kvp => kvp.Key).Max();
+        public static string GetName(int day) => AoCs != null && _aocNames.TryGetValue(day, out var name) ? name : "Unknown";
         public static AdventOfCode Create(int aocDay, bool example)
         {
             if (AoCs.TryGetValue(aocDay, out var aoc))

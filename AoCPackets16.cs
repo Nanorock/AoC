@@ -7,10 +7,9 @@ class AoCPackets16 : AdventOfCode
     Packet _inputPacket;
     public override void Run1()
     {
-        var stream = BitStream.FromHex(inputFile[0], true);
+        var stream = BitStream.FromHex(inputFile[0]);
         _inputPacket = new Packet(stream);
         WriteLine($"Packet Version sum is {_inputPacket.SumVersion()}");
-
     }
     public override void Run2()
     {
@@ -20,39 +19,32 @@ class AoCPackets16 : AdventOfCode
 
 class BitStream
 {
-    public static BitStream FromHex(string hex, bool withoutTrail = false) => new BitStream(hex, withoutTrail);
-    public static BitStream FromBinary(string binaryStr) => new BitStream(binaryStr);
+    public static BitStream FromHex(string hex) => new BitStream(hex, true);
+    public static BitStream FromBinary(string binaryStr) => new BitStream(binaryStr, false);
 
     readonly string _binaryString;
     readonly StringBuilder _sb = new StringBuilder();
 
     int _cursor = -1;
 
-    BitStream(string hexaInput, bool withoutTrail)
+    BitStream(string input, bool fromHexa)
     {
-        for (int i = 0; i < hexaInput.Length; i++)
-            _sb.Append(HexToByteString(hexaInput[i]));
+        _binaryString = input;
+        if (!fromHexa) return;
+        for (int i = 0; i < input.Length; i++)
+            _sb.Append(HexToByteString(input[i]));
+        for (int i = _sb.Length - 1; i >= 0; i--) //Remove trailing zeros
+        {
+            if (_sb[i] != '0')
+            {
+                _sb.Length = i + 1;
+                break;
+            }
+        }
         _binaryString = _sb.ToString();
         _sb.Clear();
-        if (withoutTrail)
-        {
-            int bitSetIndex = -1;
-            for (int i = _binaryString.Length - 1; i >= 0; i--)
-            {
-                if (_binaryString[i] != '0')
-                {
-                    bitSetIndex = i;
-                    break;
-                }
-            }
-            _binaryString = _binaryString.Substring(0, bitSetIndex + 1);
-        }
     }
-    BitStream(string binary)
-    {
-        _binaryString = binary;
-    }
-    
+
     public bool ReadNext(out int number, int count)
     {
         if (!ReadNext(out string str, count))
@@ -169,66 +161,20 @@ class Packet
     }
     void AddPacket(BitStream reader) => _subPackets.Add(new Packet(reader));
 
-    public int SumVersion()
-    {
-        int sum = _version;
-        for (int i = 0; i < _subPackets.Count; i++)
-            sum+=_subPackets[i].SumVersion();
-        return sum;
-    }
+    public int SumVersion() => _version + _subPackets.Sum(t => t.SumVersion());
     public ulong Decode()
     {
-        switch (_type)
+        return _type switch
         {
-            case 0:
-            {
-                ulong sum = 0;
-                for (int i = 0; i < _subPackets.Count; i++)
-                    sum += _subPackets[i].Decode();
-                return sum;
-            }
-            case 1:
-            {
-                ulong product = 1;
-                for (int i = 0; i < _subPackets.Count; i++)
-                    product *= _subPackets[i].Decode();
-                return product;
-            }
-            case 2:
-            {
-                ulong min = ulong.MaxValue;
-                for (int i = 0; i < _subPackets.Count; i++)
-                {
-                    var result = _subPackets[i].Decode();
-                    if(result < min)
-                        min = result;
-                } 
-                return min;
-            }
-            case 3:
-            {
-                ulong max = ulong.MinValue;
-                for (int i = 0; i < _subPackets.Count; i++)
-                {
-                    var result = _subPackets[i].Decode();
-                    if (result > max)
-                        max = result;
-                }
-                return max;
-            }
-            case 5:
-            {
-                return _subPackets[0].Decode() > _subPackets[1].Decode() ? 1ul : 0ul;
-            }
-            case 6:
-            {
-                return _subPackets[0].Decode() < _subPackets[1].Decode() ? 1ul : 0ul;
-            }
-            case 7:
-            {
-                return _subPackets[0].Decode() == _subPackets[1].Decode() ? 1ul : 0ul;
-            }
-        }
-        return _value;
+            0 => _subPackets.Aggregate<Packet, ulong>(0, (current, t) => current + t.Decode()),
+            1 => _subPackets.Aggregate<Packet, ulong>(1, (current, t) => current * t.Decode()),
+            2 => _subPackets.Min(p => p.Decode()),
+            3 => _subPackets.Max(p => p.Decode()),
+            5 => _subPackets[0].Decode() > _subPackets[1].Decode() ? 1ul : 0ul,
+            6 => _subPackets[0].Decode() < _subPackets[1].Decode() ? 1ul : 0ul,
+            7 => _subPackets[0].Decode() == _subPackets[1].Decode() ? 1ul : 0ul,
+            _ => _value,
+        };
     }
+    public override string ToString() => _type switch { 4 => _value.ToString(), 0 => "sum", 1 => "product", 2 => "max", 3 => "min", 5 => ">", 6 => "<", _ => "==" };
 }
