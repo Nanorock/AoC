@@ -164,6 +164,38 @@ namespace AdventOfCode_2021
             return neighborSet;
         }
 
+        void Swap(ref T t1, ref T t2) => (t1, t2) = (t2, t1);
+
+        public void BresenhamLine(int x0, int y0, int x1, int y1, List<int> result) {
+            result.Clear();
+            bool steep = Math.Abs(y1 - y0) > Math.Abs(x1 - x0);
+            if (steep)
+            {
+                (x0, y0) = (y0, x0);
+                (x1, y1) = (y1, x1);
+            }
+            if (x0 > x1) {
+                (x0, x1) = (x1, x0);
+                (y0, y1) = (y1, y0);
+            }
+
+            int deltax = x1 - x0;
+            int deltay = Math.Abs(y1 - y0);
+            int error = 0;
+            int ystep;
+            int y = y0;
+            if (y0 < y1) ystep = 1; else ystep = -1;
+            for (int x = x0; x <= x1; x++) {
+                if (steep) result.Add(GetId(y, x));
+                else result.Add(GetId(x, y));
+                error += deltay;
+                if (2 * error >= deltax) {
+                    y += ystep;
+                    error -= deltax;
+                }
+            }
+        }
+
 
         public TilemapPrinter<T> GetPrinter(Func<int, T, string> print) => new TilemapPrinter<T>(Get, print, _width, _height);
 
@@ -373,11 +405,8 @@ namespace AdventOfCode_2021
             _print = print;
         }
 
-        public string PrintState(Func<int, T, string> getStr)
-        {
-            return PrintState(_width, _height, getStr);
-        }
-
+        public string PrintState() => PrintState(_width, _height, _print);
+        public string PrintState(Func<int, T, string> getStr) => PrintState(_width, _height, getStr);
         public string PrintState(int width, int height, bool inverseY = false) => PrintState(width, height, _print, inverseY);
         public string PrintState(int width, int height, Func<int, T, string> getStr, bool inverseY = false)
         {
@@ -394,18 +423,16 @@ namespace AdventOfCode_2021
             return _sb.ToString();
         }
 
-
-        public IEnumerable<string> PrintStateLines(Func<int, T, string> getStr)
-        {
-            return PrintStateLines(_width, _height, getStr);
-        }
-        public IEnumerable<string> PrintStateLines(int width, int height) => PrintStateLines(width, height, _print);
-        public IEnumerable<string> PrintStateLines(int width, int height, Func<int, T, string> getStr)
+        public IEnumerable<string> PrintStateLines(bool reverseY = false) => PrintStateLines(_width, _height, _print, reverseY);
+        public IEnumerable<string> PrintStateLines(Func<int, T, string> getStr, bool reverseY = false) => PrintStateLines(_width, _height, getStr, reverseY);
+        public IEnumerable<string> PrintStateLines(int width, int height, bool reverseY = false) => PrintStateLines(width, height, _print, reverseY);
+        public IEnumerable<string> PrintStateLines(int width, int height, Func<int, T, string> getStr, bool reverseY = false)
         {
             for (int y = 0; y < height; y++)
             {
                 _sb.Clear();
                 int py = y;
+                if(reverseY) py = height - 1 - y;
                 int start = py * _width;
                 for (int x = 0; x < width; x++)
                 {

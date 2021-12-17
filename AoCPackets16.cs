@@ -1,7 +1,6 @@
 ﻿using System.Text;
 
 namespace AdventOfCode_2021;
-
 class AoCPackets16 : AdventOfCode
 {
     Packet _inputPacket;
@@ -139,12 +138,12 @@ class Packet
     }
 
     readonly List<Packet> _subPackets = new List<Packet>();
-    enum PacketMode { PacketLength, PacketCount }
+    const char PacketLength = '0', PacketCount  ='1';
     void ParsePackets(BitStream reader)
     {
         reader.ReadNext(out char c);
-        var mode = c == '0' ? PacketMode.PacketLength : PacketMode.PacketCount;
-        if (mode == PacketMode.PacketLength)
+        
+        if (c == PacketLength)
         {
             reader.ReadNext(out int subPacketLength, 15);
             reader.ReadNext(out string content, subPacketLength);
@@ -152,7 +151,7 @@ class Packet
             while (!subStream.IsFinished)
                 AddPacket(subStream);
         }
-        else //if (mode == PacketMode.PacketCount)
+        else //if (c == PacketCount)
         {
             reader.ReadNext(out int subPacketCount, 11);
             for (int i = 0; i < subPacketCount; i++)
@@ -166,15 +165,15 @@ class Packet
     {
         return _type switch
         {
-            0 => _subPackets.Aggregate<Packet, ulong>(0, (current, t) => current + t.Decode()),
-            1 => _subPackets.Aggregate<Packet, ulong>(1, (current, t) => current * t.Decode()),
+            0 => _subPackets.Aggregate(0ul, (sum, packet) => sum + packet.Decode()),
+            1 => _subPackets.Aggregate(1ul, (product, packet) => product * packet.Decode()),
             2 => _subPackets.Min(p => p.Decode()),
             3 => _subPackets.Max(p => p.Decode()),
-            5 => _subPackets[0].Decode() > _subPackets[1].Decode() ? 1ul : 0ul,
-            6 => _subPackets[0].Decode() < _subPackets[1].Decode() ? 1ul : 0ul,
+            5 => _subPackets[0].Decode()  > _subPackets[1].Decode() ? 1ul : 0ul,
+            6 => _subPackets[0].Decode()  < _subPackets[1].Decode() ? 1ul : 0ul,
             7 => _subPackets[0].Decode() == _subPackets[1].Decode() ? 1ul : 0ul,
             _ => _value,
         };
     }
-    public override string ToString() => _type switch { 4 => _value.ToString(), 0 => "sum", 1 => "product", 2 => "max", 3 => "min", 5 => ">", 6 => "<", _ => "==" };
+    public override string ToString() => _type switch { 0 => "sum", 1 => "product", 2 => "max", 3 => "min", 5 => ">", 6 => "<", 7 => "==", _ => _value.ToString() };
 }
