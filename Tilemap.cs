@@ -8,6 +8,8 @@ namespace AdventOfCode_2021
     public class Tilemap:BaseTilemap<int>
     {
         public Tilemap(string[] inputFile):base(inputFile, c => c-'0') { }
+        public Tilemap(string[] inputFile,Func<char, int> get):base(inputFile, get) { }
+
         public Tilemap(int width, int height):base(width,height) { }
         public Tilemap(Tilemap copy) : base(copy) { }
         
@@ -148,7 +150,6 @@ namespace AdventOfCode_2021
             neighborSet.SetLength(valid + 1);
             return neighborSet;
         }
-            //=> GetNeighbors(id, Neighbors.X4Offset, Neighbors.Y4Offset, Neighbors.Get4());
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Neighbors Get8Neighbors(int id) => GetNeighbors(id, Neighbors.X8Offset, Neighbors.Y8Offset, Neighbors.Get8());
         Neighbors GetNeighbors(int id, int[] xOffsets, int[] yOffsets, Neighbors neighborSet)
@@ -163,6 +164,16 @@ namespace AdventOfCode_2021
             neighborSet.SetLength(valid+1);
             return neighborSet;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Neighbors GetFullNeighbors(int x, int y)
+        {
+            var neighborSet = Neighbors.Get9();
+            for (int i = 0; i < neighborSet.Length; i++)
+                neighborSet[i] = GetId(x + Neighbors.VisualX9Offset[i], y + Neighbors.VisualY9Offset[i]);
+            return neighborSet;
+        }
+
 
         void Swap(ref T t1, ref T t2) => (t1, t2) = (t2, t1);
 
@@ -352,10 +363,15 @@ namespace AdventOfCode_2021
         public static readonly int[] X8Offset = { 0, 1, 1, 1, 0, -1, -1, -1 };
         public static readonly int[] Y8Offset = { 1, 1, 0, -1, -1, -1, 0, 1 };
 
+        public static readonly int[] VisualX9Offset = { -1, 0, 1,-1, 0, 1,-1, 0, 1 };
+        public static readonly int[] VisualY9Offset = { -1,-1,-1, 0, 0, 0, 1, 1, 1 };
+
         static readonly Stack<int[]> Pool4 = new Stack<int[]>();
         static readonly Stack<int[]> Pool8 = new Stack<int[]>();
+        static readonly Stack<int[]> Pool9 = new Stack<int[]>();
         public static Neighbors Get4() => new Neighbors(Pool4,4);
         public static Neighbors Get8() => new Neighbors(Pool8,8);
+        public static Neighbors Get9() => new Neighbors(Pool9,9);
 
         int[] _value;
         Stack<int[]> _pool;
@@ -405,8 +421,8 @@ namespace AdventOfCode_2021
             _print = print;
         }
 
-        public string PrintState() => PrintState(_width, _height, _print);
-        public string PrintState(Func<int, T, string> getStr) => PrintState(_width, _height, getStr);
+        public string PrintState(bool reverseY = false) => PrintState(_width, _height, _print, reverseY);
+        public string PrintState(Func<int, T, string> getStr,bool reverseY = false) => PrintState(_width, _height, getStr, reverseY);
         public string PrintState(int width, int height, bool inverseY = false) => PrintState(width, height, _print, inverseY);
         public string PrintState(int width, int height, Func<int, T, string> getStr, bool inverseY = false)
         {
