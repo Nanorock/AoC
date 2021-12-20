@@ -38,7 +38,7 @@ class AoCTrenchMap20 : AdventOfCode
     
     int GetInfiniteVoidAlgoBit(int emptyBit)
     {
-                int algoId = emptyBit == 0 ? 0 : (emptyBit << 9) - 1;
+        int algoId = emptyBit == 0 ? 0 : (emptyBit << 9) - 1;
         return _imageEnhancementAlgorithm[algoId];
     }
     
