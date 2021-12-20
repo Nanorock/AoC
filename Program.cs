@@ -8,8 +8,8 @@ namespace AdventOfCode_2021
     {
         static void Main(string[] args)
         {
-            //RunLatest(false);
-            WatchRunAll();
+            RunLatest(true);
+            //WatchRunAll();
             while(true)
                 Console.ReadLine();
         }

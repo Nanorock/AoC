@@ -72,12 +72,13 @@ class AoCBallistic17 : AdventOfCode
             }
         }
         WriteLine($"Correct shot with max y {maxY} with vel {highest}");
+        Plot(highest);
     }
     
     //Just for fun
     void Plot(Vector2i vel)
     {
-        int Y(int y) => y + Math.Abs(minY);
+        int Y(int y) => (y + Math.Abs(minY))/50;
 
         var maxAboveGround = (minY * (minY + 1) / 2);
         var yHeight = Y(maxAboveGround);

@@ -24,7 +24,7 @@ namespace AdventOfCode_2021
 
             hash.Clear();
         }
-        public static void Intersect<T>(this List<T> list, IEnumerable<T> values)
+        public static void RemoveIntersect<T>(this List<T> list, IEnumerable<T> values)
         {
             var hash = HashCache<T>.Value;
             foreach (var v in values)
@@ -336,8 +336,7 @@ namespace AdventOfCode_2021
             int d = p.Dot(perp);
             return Math.Sign(d);
         }
-
-
+        
         public override bool Equals(object obj)
         {
             // If parameter is null return false.
@@ -445,6 +444,396 @@ namespace AdventOfCode_2021
         {
             x = this.x;
             y = this.y;
+        }
+    }
+
+    /**
+     * vector of three ints with some vector functions (right handed), which can safely passed by value to a native library 
+     * (if passed as pointer it must also be pinned in memory)
+     */
+    [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Vector3i : IEquatable<Vector3i>
+    {
+        static Vector3i _zeros = new Vector3i(0, 0, 0);
+        public static Vector3i ZEROS => _zeros;
+
+        static Vector3i _ones = new Vector3i(1, 1, 1);
+        public static Vector3i ONES => _ones;
+
+        public int x, y, z;
+
+        public Vector3i(int x = 0, int y = 0, int z = 0)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        public Vector3i(Vector3i other)
+        {
+            this.x = other.x;
+            this.y = other.y;
+            this.z = other.z;
+        }
+
+        public void Set(Vector3i other)
+        {
+            this.x = other.x;
+            this.y = other.y;
+            this.z = other.z;
+        }
+
+        public void Set(int x, int y, int z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+        public bool IsZero()
+        {
+            return x == 0 && y == 0 && z == 0;
+        }
+        
+        public void SetToZero()
+        {
+            this.x = this.y = this.z = 0;
+        }
+
+        public void SetToAbsoluteValues()
+        {
+            if (x < 0) x = -x;
+            if (y < 0) y = -y;
+            if (z < 0) z = -z;
+        }
+
+        public void Add(Vector3i other)
+        {
+            x += other.x;
+            y += other.y;
+            z += other.z;
+        }
+
+        public void Add(int x, int y)
+        {
+            this.x += x;
+            this.y += y;
+        }
+        public void Add(int x, int y, int z)
+        {
+            this.x += x;
+            this.y += y;
+            this.z += z;
+        }
+
+        public void Subtract(Vector3i other)
+        {
+            x -= other.x;
+            y -= other.y;
+            z -= other.z;
+        }
+
+        public void Scale(int scale)
+        {
+            this.x *= scale;
+            this.y *= scale;
+            this.z *= scale;
+        }
+
+        public void ScaleAdd(int scale, Vector3i other)
+        {
+            this.x += scale * other.x;
+            this.y += scale * other.y;
+            this.z += scale * other.z;
+        }
+
+        public void Divide(int divisor)
+        {
+            this.x /= divisor;
+            this.y /= divisor;
+            this.z /= divisor;
+        }
+
+        public void Avg(Vector3i other)
+        {
+            this.x = (this.x + other.x) / 2;
+            this.y = (this.y + other.y) / 2;
+            this.z = (this.z + other.z) / 2;
+        }
+
+        /**
+         * scalar product
+         */
+        public int Dot(Vector3i other)
+        {
+            return this.x * other.x + this.y * other.y + this.z * other.z;
+        }
+
+        /**
+         * cross product stored in this vector
+         */
+        public void CrossWith(Vector3i other)
+        {
+            int nx = this.y * other.z - this.z * other.y;
+            int ny = this.z * other.x - this.x * other.z;
+            int nz = this.x * other.y - this.y * other.x;
+            this.x = nx;
+            this.y = ny;
+            this.z = nz;
+        }
+
+        /**
+        * cross product stored in new vector
+        */
+        public Vector3i Cross(Vector3i other)
+        {
+            return new Vector3i(
+                this.y * other.z - this.z * other.y,
+                this.z * other.x - this.x * other.z,
+                this.x * other.y - this.y * other.x
+            );
+        }
+        
+      
+        public readonly int LengthSquared()
+        {
+            return x * x + y * y + z * z;
+        }
+        public double Length()
+        {
+            return Math.Sqrt(LengthSquared());
+        }
+        /*
+        public float Lengthf()
+        {
+            return UnityEngine.Mathf.Sqrt(LengthSquared());
+        }
+        */
+        public int LengthSquared2D()
+        {
+            return x * x + y * y;
+        }
+        public double length2D()
+        {
+            return Math.Sqrt(LengthSquared());
+        }
+        /*
+        public float Lengthf2D()
+        {
+            return UnityEngine.Mathf.Sqrt(LengthSquared());
+        }
+        */
+        public int DistanceSquared(Vector3i other)
+        {
+            int dx = other.x - x;
+            int dy = other.y - y;
+            int dz = other.z - z;
+            return dx * dx + dy * dy + dz * dz;
+        }
+
+        public int DistanceSquared2D(Vector3i other)
+        {
+            int dx = other.x - x;
+            int dy = other.y - y;
+
+            return dx * dx + dy * dy;
+        }
+
+        public double Distance(Vector3i other)
+        {
+            return Math.Sqrt(DistanceSquared(other));
+        }
+        /*
+        public float Distancef(Vector3i other)
+        {
+            return UnityEngine.Mathf.Sqrt(DistanceSquared(other));
+        }
+        */
+        public double Distance2D(Vector3i other)
+        {
+            return Math.Sqrt(DistanceSquared2D(other));
+        }
+        /*
+        public float Distancef2D(Vector3i other)
+        {
+            return UnityEngine.Mathf.Sqrt(DistanceSquared2D(other));
+        }
+        */
+        public bool IsInSphereRadius(Vector3i other, int radius)
+        {
+            return DistanceSquared(other) <= radius * radius;
+        }
+
+        public bool IsInCircleRadius(Vector3i other, int radius)
+        {
+            return DistanceSquared2D(other) <= radius * radius;
+        }
+
+        public int MaxComponent()
+        {
+            return x >= y ? (x >= z ? x : z) : (y >= z ? y : z);
+        }
+        public int MaxComponent2D()
+        {
+            return x >= y ? x : y;
+        }
+
+        public int MinComponent()
+        {
+            return x <= y ? (x <= z ? x : z) : (y <= z ? y : z);
+        }
+        public int MinComponent2D()
+        {
+            return x <= y ? x : y;
+        }
+/*
+        public UnityEngine.Vector3 ToLefthanded(UnityEngine.Vector3 lhVector3)
+        {
+            lhVector3.x = x;
+            lhVector3.y = z;
+            lhVector3.z = y;
+            return lhVector3;
+        }
+*/       
+        public override bool Equals(object obj)
+        {
+            // If parameter is null return false.
+            if (obj == null)
+            {
+                return false;
+            }
+
+            // If parameter cannot be cast to Point return false.
+            Vector3i? v = obj as Vector3i?;
+            if (v is null)
+            {
+                return false;
+            }
+            return this == v;
+        }
+        public bool Equals(Vector3i other)
+        {
+            return this == other;
+        }
+
+        public override int GetHashCode()
+        {
+
+            return x.GetHashCode() ^ y.GetHashCode() ^ z.GetHashCode();
+        }
+
+        /**
+         * indexing operator
+         */
+        public int this[int i]
+        {
+            get
+            {
+                switch (i)
+                {
+                    case 0: return x;
+                    case 1: return y;
+                    case 2: return z;
+                    default: throw new IndexOutOfRangeException("Index " + i + " is out of " + GetType() + " Range");
+                }
+            }
+            set
+            {
+                switch (i)
+                {
+                    case 0: x = value; break;
+                    case 1: y = value; break;
+                    case 2: z = value; break;
+                    default: throw new IndexOutOfRangeException("Index " + i + " is out of " + GetType() + " Range");
+                }
+            }
+        }
+
+        public static Vector3i operator +(in Vector3i a, in Vector3i b) => new Vector3i(a.x + b.x, a.y + b.y, a.z + b.z);
+
+        public static Vector3i operator +(Vector3i a, int offset) => new Vector3i(a.x + offset, a.y + offset, a.z + offset);
+
+        public static Vector3i operator +(int offset, Vector3i a) => new Vector3i(offset + a.x, offset + a.y, offset + a.z);
+
+        public static Vector3i operator -(in Vector3i a, in Vector3i b) => new Vector3i(a.x - b.x, a.y - b.y, a.z - b.z);
+
+        public static Vector3i operator -(Vector3i a, int offset) => new Vector3i(a.x - offset, a.y - offset, a.z - offset);
+
+        public static Vector3i operator -(int offset, Vector3i a) => new Vector3i(offset - a.x, offset - a.y, offset - a.z);
+
+        public static Vector3i operator *(Vector3i a, int scale) => new Vector3i(a.x * scale, a.y * scale, a.z * scale);
+
+        public static Vector3i operator *(int scale, Vector3i a) => a * scale;
+
+        public static Vector3i operator /(Vector3i a, int scale) => new Vector3i(a.x / scale, a.y / scale, a.z / scale);
+
+        /**
+         * cross product
+         */
+        public static Vector3i operator *(Vector3i a, Vector3i b) => new Vector3i(
+                a.y * b.z - a.z * b.y,
+                a.z * b.x - a.x * b.z,
+                a.x * b.y - a.y * b.x
+            );
+
+
+        public static bool operator ==(in Vector3i a, in Vector3i b) => a.x == b.x && a.y == b.y && a.z == b.z;
+        public static bool operator !=(in Vector3i a, in Vector3i b) => !( a == b );
+        public static bool operator <(in Vector3i a, in Vector3i b) => a.LengthSquared() < b.LengthSquared();
+        public static bool operator <=(in Vector3i a,in Vector3i b) => a.LengthSquared() <= b.LengthSquared();
+        public static bool operator >(in Vector3i a, in Vector3i b) => a.LengthSquared() > b.LengthSquared();
+
+        public static bool operator >=(in Vector3i a, in Vector3i b) => a.LengthSquared() >= b.LengthSquared();
+
+        public override string ToString()
+        {
+            return GetType().Name + "( " + x + " ; " + y + " ; " + z + " )";
+
+        }
+
+        public static Vector3i Min(Vector3i v1, Vector3i v2)
+        {
+            return new Vector3i(Math.Min(v1.x, v2.x), Math.Min(v1.y, v2.y), Math.Min(v1.z, v2.z));
+        }
+        public static Vector3i Max(Vector3i v1, Vector3i v2)
+        {
+            return new Vector3i(Math.Max(v1.x, v2.x), Math.Max(v1.y, v2.y), Math.Max(v1.z, v2.z));
+        }
+
+        public static bool DoBoxesOverlap(Vector3i box1Min, Vector3i box1Max, Vector3i box2Min, Vector3i box2Max)
+        {
+            return
+                !(box2Max.x <= box1Min.x || box2Min.x >= box1Max.x
+                || box2Max.y <= box1Min.y || box2Min.y >= box1Max.y
+                || box2Max.z <= box1Min.z || box2Min.z >= box1Max.z);
+        }
+        public static bool DoBoxesOverlap2D(Vector3i box1Min, Vector3i box1Max, Vector3i box2Min, Vector3i box2Max)
+        {
+            return
+                !(box2Max.x <= box1Min.x || box2Min.x >= box1Max.x
+                || box2Max.y <= box1Min.y || box2Min.y >= box1Max.y);
+        }
+
+        public static bool DoBoundsOverlap(Vector3i location1, Vector3i bounds1, Vector3i location2, Vector3i bounds2)
+        {
+            return !(Math.Abs(location1.x - location2.x) >= 0.5f * (bounds1.x + bounds2.x)
+                  || Math.Abs(location1.y - location2.y) >= 0.5f * (bounds1.y + bounds2.y)
+                  || Math.Abs(location1.z - location2.z) >= 0.5f * (bounds1.z + bounds2.z));
+        }
+
+        public static bool DoBoundsOverlap2D(Vector3i location1, Vector3i bounds1, Vector3i location2, Vector3i bounds2)
+        {
+            return !(Math.Abs(location1.x - location2.x) >= 0.5f * (bounds1.x + bounds2.x)
+                  || Math.Abs(location1.y - location2.y) >= 0.5f * (bounds1.y + bounds2.y));
+        }
+
+        public readonly Vector2i ToVector2i => new Vector2i(x, y);
+
+        public readonly void Deconstruct(out int x, out int y, out int z) 
+        {
+            x = this.x;
+            y = this.y;
+            z = this.z;
         }
     }
 }
