@@ -54,14 +54,16 @@ class AoCDiracDice21 : AdventOfCode
         }
         public Game Progress(int roll) =>
             _p2Turn ? new Game(P1, P2.Step(roll), !_p2Turn) 
-                : new Game(P1.Step(roll), P2, !_p2Turn);
+                    : new Game(P1.Step(roll), P2, !_p2Turn);
+
+        public override int GetHashCode() => HashCode.Combine(P1,P2,_p2Turn);
     }
     readonly struct Player
     {
         readonly int _board;
         readonly int _score;
         public int Score => _score;
-        public Player(int start, int score)
+        public Player(int start, int score = 0)
         {
             _board = start;
             _score = score;
@@ -72,21 +74,24 @@ class AoCDiracDice21 : AdventOfCode
             var nextMove = (_board+move-1)%10 + 1;
             return new Player(nextMove, _score + nextMove);
         }
+        public override int GetHashCode() => HashCode.Combine(_board,_score);
     }
 
    
     public override void Run2()
     {
-        var result = Play(inputFile[0][^1] - '0', 0, inputFile[1][^1] - '0', 0, 0);
+        var game = new Game(new Player(inputFile[0][^1] - '0'), new Player(inputFile[1][^1] - '0'));
+        var result = Play(game);
         Console.WriteLine($"{result.player1Wins},{result.player2Wins}");
     }
     
     //If you roll 3 times a D3, here are all the possible results frequency
     readonly ulong[] _d3Roll3Freq = { 1, 3, 6, 7, 6, 3, 1 };
     Dictionary<int, (ulong player1Wins, ulong player2Wins)> _determinedOutcome = new Dictionary<int, (ulong player1Wins, ulong player2Wins)>();
-    (ulong player1Wins, ulong player2Wins) Play(int player1Pos, int player1Score, int player2Pos, int player2Score, int playerTwoTurn)
+    
+    (ulong player1Wins, ulong player2Wins) Play(in Game game)
     {
-        int hash = HashCode.Combine(player1Pos, player1Score, player2Pos, player2Score, playerTwoTurn);
+        int hash = game.GetHashCode();
         if (_determinedOutcome.TryGetValue(hash, out var resultCache))
             return resultCache;
 
@@ -94,21 +99,14 @@ class AoCDiracDice21 : AdventOfCode
         for (int diceResult = 3; diceResult <= 9; ++diceResult)
         {
             var frequency = _d3Roll3Freq[diceResult - 3];
-            
-            int playerOneTurn = 1 - playerTwoTurn;
-            int p1 = (player1Pos + (diceResult - 1) * playerOneTurn) % 10 + playerOneTurn;
-            int score1 = player1Score + p1 * playerOneTurn;
-            int won1 = score1 / 21;
-            results.player1Wins += frequency * (ulong)won1;
 
-            int p2 = (player2Pos + (diceResult - 1) * playerTwoTurn) % 10 + playerTwoTurn;
-            int score2 = player2Score + p2 * playerTwoTurn;
-            int won2 = score2 / 21;
-            results.player2Wins += frequency * (ulong)won2;
-            
-            if (won1 + won2 == 0)
+            var newGame = game.Progress(diceResult);
+
+            if (newGame.P1.Win(21)) results.player1Wins += frequency;
+            else if (newGame.P2.Win(21)) results.player2Wins += frequency;
+            else
             {
-                var play = Play(p1,score1, p2,score2,1-playerTwoTurn);
+                var play = Play(newGame);
                 results.player1Wins += play.player1Wins * frequency;
                 results.player2Wins += play.player2Wins * frequency;
             }
@@ -118,5 +116,4 @@ class AoCDiracDice21 : AdventOfCode
 
         return results;
     }
-
 }
