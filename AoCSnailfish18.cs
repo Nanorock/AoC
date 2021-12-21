@@ -24,14 +24,10 @@ class AoCSnailfish18 : AdventOfCode
             for (int j = 0; j < _numbers.Length; j++)
             {
                 if (i == j) continue;
-                var n1 = _numbers[i];
-                var n2 = _numbers[j];
-                var addition = n1 + n2;
+                var addition = _numbers[i] + _numbers[j];
                 var magnitude = addition.GetMagnitude();
                 if (magnitude > maxMagnitude)
                     maxMagnitude = magnitude;
-                _numbers[i] = new Number(inputFile[i]);
-                _numbers[j] = new Number(inputFile[j]);
             }
         }
         Console.WriteLine($"Highest magnitude {maxMagnitude}");
@@ -49,31 +45,47 @@ class AoCSnailfish18 : AdventOfCode
 
     class Number
     {
-        public int Value;
+        int _value;
         
-        public Number? X;
-        public Number? Y;
+        Number? _x;
+        Number? _y;
         
-        public bool IsAtomic;// => !IsValue && X.IsValue && Y.IsValue;
-        public bool IsValue;// => X == null && Y == null;
+        bool _isAtomic;
+        void SetAtomic()
+        {
+            _isAtomic = true;
+            _isValue = false;
+        }
 
-        public Number? Parent;
-        public int Depth;
+        bool _isValue;
+        void SetValue(int val)
+        {
+            _x = _y = null;
+            _value = val;
+            _isValue = true;
+            _isAtomic = false;
+            if (_parent._x._isValue && _parent._y._isValue)
+                _parent._isAtomic = true;
+        }
+
+        Number? _parent;
+        int _depth;
         
         #region Constructor
         Number(){}
-        public Number(int value, Number parent)
+        Number(int value, Number parent, int depth)
         {
-            Value = value;
-            Parent = parent;
-            IsValue = true;
+            _value = value;
+            _parent = parent;
+            _isValue = true;
+            _depth = depth;
         }
         public Number(string parse, Number parent = null)
         {
             bool isValue = parse[0] != '[';
             if (!isValue) ParsePair(parse, parent);
             else ParseNumber(parse);
-            Parent = parent;
+            _parent = parent;
         }
 
         void ParsePair(string parse, Number parent = null)
@@ -91,127 +103,169 @@ class AoCSnailfish18 : AdventOfCode
                     break;
                 }
             }
-            X = new Number(content[..comma],this);
-            Y = new Number(content[(comma+1)..],this);
-            IsAtomic = X.IsValue && Y.IsValue;
-            Parent = parent;
+            _x = new Number(content[..comma],this);
+            _y = new Number(content[(comma+1)..],this);
+            _isAtomic = _x._isValue && _y._isValue;
+            _parent = parent;
         }
         void ParseNumber(string parse)
         {
-            Value = int.Parse(parse);
-            IsValue = true;
+            _value = int.Parse(parse);
+            _isValue = true;
         }
 
-        public Number(Number a, Number b)
+        Number(Number a, Number b)
         {
-            X = a;
-            Y = b;
-            X.Parent = Y.Parent = this;
+            _x = a;
+            _y = b;
+            _x._parent = _y._parent = this;
         }
         #endregion
 
         public static Number operator +(Number a, Number b)
         {
-            Number result = new Number(a, b);
+            Number result = new Number(a.Clone(), b.Clone());
             result.Reduce();
             return result;
         }
-        
-        public void Reduce()
-        {
-            ScanDepth();
-            bool changed = true;
-            while (changed)
-            {
-                changed = CheckExplosion();
-                while (changed)
-                    changed = CheckExplosion();
 
-                changed = CheckSplit();
-            }
+        static Number _reducing;
+        void Reduce()
+        {
+            _reducing = this;
+            ScanDepth();
+            while (true)
+                if (!CheckExplosion() && !CheckSplit())
+                    break;
+            _reducing = null;
         }
 
         bool CheckExplosion()
         {
-            var exploder = Find(n => n.IsAtomic && n.Depth >= 4);
-            return exploder?.Explode()??false;
+            UpdateAllExplode();
+            for (int i = 0; i < _allExpsCount; i++)
+                _allExps[i].Explode();
+            return _allExpsCount > 0;
         }
-        bool Explode()
+        void Explode()
         {
-            if (!IsAtomic || Depth < 4) return false;
-
-            var values = GetValues();
-            int myX = values.FindIndex((n) => n == X);
-            if (myX > 0) values[myX - 1].Value += X.Value;
+            UpdateAllValues();
+            int myX = -1;
+            for (int i = 0; i < _allValuesCount; i++)
+            {
+                if (_allValues[i] == _x)
+                {
+                    myX = i;
+                    break;
+                }
+            }
             int myY = myX + 1;
-            if (myY < values.Count - 1) values[myY + 1].Value += Y.Value;
-            
-            X = Y = null;
-            Value = 0;
-            IsValue = true;
-            IsAtomic = false;
-            if (Parent.X.IsValue && Parent.Y.IsValue)
-                Parent.IsAtomic = true;
-
-            return true;
+            if (myX > 0) _allValues[myX - 1]._value += _x._value;
+            if (myY < _allValuesCount - 1) _allValues[myY + 1]._value += _y._value;
+            SetValue(0);
         }
 
         bool CheckSplit()
         {
-            var splitter = Find(n => n.IsValue && n.Value > 9);
-            return splitter?.Split() ?? false;
+            var splitter = Find(n => n._isValue && n._value > 9);
+            splitter?.Split();
+            return splitter != null;
         }
-        bool Split()
+        void Split()
         {
-            if (!IsValue || Value <= 9) return false;
-            X = new Number((int)Math.Floor(Value * 0.5f), this);
-            X.Depth = Depth + 1;
-            Y = new Number((int)Math.Ceiling(Value * 0.5f), this);
-            Y.Depth = Depth + 1;
-            IsValue = false;
-            IsAtomic = true;
-            return true;
+            _x = new Number((int)Math.Floor(_value * 0.5f)  , this,_depth + 1);
+            _y = new Number((int)Math.Ceiling(_value * 0.5f), this,_depth + 1);
+            SetAtomic();
         }
 
-        static readonly List<Number> _values = new List<Number>();
-        List<Number> GetValues() { _values.Clear(); GetTopNumber().GetValues(_values); return _values; }
-        void GetValues(List<Number> result)
+        static readonly Number[] _allValues = new Number[256];
+        static int _allValuesCount;
+        void UpdateAllValues()
         {
-            if(IsValue) result.Add(this);
-            else if(!IsValue)            
+            _allValuesCount = -1;
+            _reducing.UpdateValues();
+            ++_allValuesCount;
+        }
+        void UpdateValues()
+        {
+            if (_isValue)
+                _allValues[++_allValuesCount] = this;
+            else
             {
-                X.GetValues(result);
-                Y.GetValues(result);
+                _x.UpdateValues();
+                _y.UpdateValues();
             }
         }
+
+        static readonly Number[] _allExps = new Number[256];
+        static int _allExpsCount;
+        void UpdateAllExplode()
+        {
+            _allExpsCount = -1;
+            _reducing.UpdateExplode();
+            ++_allExpsCount;
+        }
+        void UpdateExplode()
+        {
+            if(_isAtomic && _depth >= 4) 
+                _allExps[++_allExpsCount] = this;
+            else if(!_isValue)            
+            {
+                _x.UpdateExplode();
+                _y.UpdateExplode();
+            }
+        }
+
+
         Number? Find(Func<Number,bool> filter)
         {
             if(filter(this)) return this;
-            return !IsValue ? X.Find(filter) ?? Y.Find(filter) : null;
+            return !_isValue ? _x.Find(filter) ?? _y.Find(filter) : null;
         }
         
         public void ScanDepth(int depth = 0)
         {
-            Depth = depth;
-            X?.ScanDepth(depth+1);
-            Y?.ScanDepth(depth+1);
+            _depth = depth;
+            _x?.ScanDepth(depth+1);
+            _y?.ScanDepth(depth+1);
         }
-
-        Number GetTopNumber()
-        {
-            if (Parent == null) return this;
-            var parent = Parent;
-            while (parent.Parent != null)
-                parent = parent.Parent;
-            return parent;
-        }
-
         public ulong GetMagnitude()
         {
-            if (IsValue) return (ulong)Value;
-            return 3ul * X.GetMagnitude() + 2ul * Y.GetMagnitude();
+            if (_isValue) return (ulong)_value;
+            return 3ul * _x.GetMagnitude() + 2ul * _y.GetMagnitude();
         }
 
-        public override string ToString() => IsValue ? Value.ToString(): $"[{X},{Y}]";
+        public override string ToString() => _isValue ? _value.ToString(): $"[{_x},{_y}]";
+
+
+        Number Clone()
+        {
+            var number = SubClone();
+            number.SetParent();
+            return number;
+        }
+        Number SubClone()
+        {
+            var number = new Number {
+                _depth = _depth,
+                _value = _value,
+                _isAtomic = _isAtomic,
+                _isValue = _isValue
+            };
+            if (!number._isValue)
+            {
+                number._x = _x.Clone();
+                number._y = _y.Clone();
+            }
+            return number;
+        }
+        void SetParent()
+        {
+            if (_isValue) return;
+            _x._parent = this;
+            _x.SetParent();
+            _y._parent = this;
+            _y.SetParent();
+        }
     }
 }

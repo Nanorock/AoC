@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -835,5 +836,400 @@ namespace AdventOfCode_2021
             y = this.y;
             z = this.z;
         }
+    }
+
+    [Serializable]
+    public class ArrayDeque<T> : IList<T>, IReadOnlyList<T>
+    {
+        int _begin,_end,_size,_capacity;
+        T[] _ring;
+        readonly IEqualityComparer<T> _comparer;
+
+        public ArrayDeque() : this(0) { }
+        public ArrayDeque(int initialCapacity) : this(initialCapacity, EqualityComparer<T>.Default) { }
+        public ArrayDeque(IEqualityComparer<T> comparer) : this(16, comparer) { }
+        public ArrayDeque(int initialCapacity, IEqualityComparer<T> comparer) {
+		    _capacity = initialCapacity;
+            _ring = _capacity == 0 ? Array.Empty<T>() : new T[_capacity];
+            _begin = _end = _size = 0;
+            _comparer = comparer;
+	    }
+
+        public ArrayDeque(ArrayDeque<T> other)
+        {
+            _capacity = other._capacity;
+            _ring = new T[_capacity];
+            Array.Copy(other._ring, _ring, other._size);
+            _begin = other._begin;
+            _end = other._end;
+            _size = other._size;
+            _comparer = other._comparer;
+        }
+
+        public T Get(int i) {
+		    return i >= 0 && i < _size ? _ring[Index(i)] : default;
+	    }
+
+        public void Set(int i, in T value)
+        {
+            if (i >= 0 && i < _size) 
+                _ring[Index(i)] = value;
+        }
+
+        public ref T GetRef(int i)
+        {
+            return ref _ring[Index(i >= 0 && i < _size ? i : _end)];
+        }
+
+        public T GetFirst() {
+		    return _size == 0 ? default : _ring[_begin];
+	    }
+        public ref T GetFirstRef()
+        {
+            return ref _ring[_begin];
+        }
+        public T GetLast() {
+            return _size == 0 ? default : _ring[Prev(_end)];
+	    }
+        public ref T GetLastRef()
+        {
+            return ref _ring[Prev(_end)];
+        }
+
+        public void Push(in T elem) { AddFirst(elem); }
+        public T Pop() { return RemoveFirst(); }
+        public T Peek() { return GetFirst(); }
+
+        public void Enqueue(in T elem) { AddLast(elem); }
+        public T Dequeue() { return RemoveFirst(); }
+
+        //public void Add(in T elem){ AddLast(elem); }
+        public void Add(T elem) { AddLast(elem); }
+
+        public bool AddIfNotContained(T elem) { if (Contains(elem)) return false; AddLast(elem); return true; }
+
+        public void AddLast(in T elem) {
+		    EnsureCapacity();
+		    _ring[_end] = elem;
+            _end = Next(_end);
+		    ++_size;	
+	    }
+
+	    public T RemoveLast() {
+		    if (_size==0) return default;
+            _end = Prev(_end);
+		    --_size;		
+		    return _ring[_end];
+	    }
+
+	    public void AddFirst(in T elem) {
+		    EnsureCapacity();				
+		    _begin = Prev(_begin);
+            _ring[_begin] = elem;		    			
+		    ++_size;	
+	    }
+
+	    public T RemoveFirst() {
+		    if (_size==0) return default;		
+		    var elem = _ring[_begin];
+            _begin = Next(_begin);
+		    --_size;		
+		    return elem;
+	    }
+
+	    public void Clear() {
+            _size = _begin = _end = 0;
+	    }
+        /*
+        private bool isEqual(object elem1, object elem2) {
+            return elem1 == elem2 || elem1 != null && elem1.Equals(elem2);
+        }
+        private bool isEqual(T elem1, T elem2)
+        {
+            //if (elem1 == elem2) return true;
+            return elem1 == null && elem2 == null || elem1 != null && elem1.Equals(elem2);
+        } 
+        */
+        /*
+        public bool Contains(T elem)
+        {
+            return Contains(in elem);
+        }
+        */
+        public bool Contains(T elem)
+        {
+            for (var i = _begin; i != _end; i = Next(i))
+            {
+                if (_comparer.Equals(_ring[i], elem))
+                    return true;
+            }
+            return false;
+        }
+
+        /*
+        public bool Remove(T elem)
+        {
+            return Remove(in elem);
+        }*/
+        public bool Remove(T elem)
+        {
+            for (var i = _begin; i != _end; i = Next(i))
+            {
+                if (_comparer.Equals(_ring[i], elem))
+                {
+                    _end = Prev(_end);
+                    int j;
+                    for (; i != _end; i = j)
+                    {
+                        j = Next(i);
+                        _ring[i] = _ring[j];
+                    }
+                    --_size;
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        public int FindIndex(Predicate<T> predicate)
+        {
+            for (var i = 0; i < _size; ++i)
+            {
+                if (predicate(_ring[Index(i)]))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        public bool RemoveFirst(Predicate<T> predicate)
+        {
+            if (_size == 0) return false;
+
+            for (var i = _begin; i != _end; i = Next(i))
+            {
+                if (predicate(_ring[i]))
+                {
+                    _end = Prev(_end);
+                    int j;
+                    for (; i != _end; i = j)
+                    {
+                        j = Next(i);
+                        _ring[i] = _ring[j];
+                    }
+                    --_size;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public int RemoveAll(Predicate<T> match)
+        {
+            if (_size == 0) return 0;
+
+            var freeIndex = _begin;
+            while (freeIndex != _end && !match(_ring[freeIndex])) freeIndex = Next(freeIndex);
+            if (freeIndex == _end) return 0;
+
+            var removedCount = 1;
+            var current = Next(freeIndex);
+            while (true)
+            {
+                while (current != _end && match(_ring[current]))
+                {
+                    current = Next(current);
+                    removedCount++;
+                }
+                if (current != _end)
+                {
+                    _ring[freeIndex] = _ring[current];
+                    freeIndex = Next(freeIndex);
+                    current = Next(current);
+                }
+                else
+                    break;
+            }
+            var r = removedCount;
+            while (--r >= 0)
+                _end = Prev(_end);
+            _size -= removedCount;
+            return removedCount;
+        }
+
+        /*     
+        public T[] ToArray(T[] tofill = null)
+        { 
+            if (tofill == null)
+                tofill = new T[size];
+            for (int i = 0; i < size; ++i)
+            { 
+                tofill[i] = ring[index(i)];
+            }
+            return tofill;
+        }
+        */
+        public int Count => _size;
+
+        public bool IsEmpty() { return _size == 0; }
+
+        public int Capacity => _capacity;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        int Index(int i) => (_begin + i) % _capacity;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        int Next(int i) => (i + 1) % _capacity;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        int Prev(int i) => (i - 1 + _capacity) % _capacity;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void EnsureCapacity() {
+            if (_size + 1 >= _capacity)
+            { // size +1 to have always an unused element for the end pointer (alternative would need more case distinctions)
+                Resize(_capacity == 0 ? 8 :  (3 * _capacity + 1) >> 1);               
+		    }
+	    }
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        void Resize(int newCapacity)
+        {
+            var newRing = new T[newCapacity];
+            if (_begin <= _end)
+            {
+                Array.Copy(_ring, _begin, newRing, 0, _size);
+            }
+            else
+            {
+                var rightIntervalCount = _capacity - _begin;
+                Array.Copy(_ring, _begin, newRing, 0, rightIntervalCount);
+                Array.Copy(_ring, 0, newRing, rightIntervalCount, _end);
+            }
+            _capacity = newCapacity;
+            _ring = newRing;
+            _begin = 0;
+            _end = _size;
+        }
+
+        public void ResizeTo(int newCapacity)
+        {
+            Resize(Math.Max(newCapacity, _size));
+        }
+
+        /// Remaining Implementation of IList<T>
+        /// ------------------------------------
+
+        public bool IsReadOnly => false;
+
+        public T this[int i]
+        {
+            get => Get(i);
+            set => Set(i, value);
+        }
+        /*
+        public ref T this[int i]
+        {
+            get { return ref GetRef(i); }
+        }
+        */
+        public void AddRange(ArrayDeque<T> queue)
+        {
+            var cnt = queue.Count;
+            for (var i = 0; i < cnt; ++i)
+            {
+                AddLast(queue.Get(i));
+            }
+        }
+        public void AddRange(IEnumerable<T> source)
+        {            
+            foreach (var item in source)
+            {
+                AddLast(item);
+            }
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            if (array == null) throw new ArgumentNullException(nameof(array), "array is null");
+            if (arrayIndex < 0) throw new ArgumentOutOfRangeException(nameof(arrayIndex), "arrayIndex is less than 0.");
+            if (arrayIndex + array.Length < _size) throw new ArgumentException("The number of elements in the source ICollection<T> is greater than the available space from arrayIndex to the end of the destination array.", nameof(arrayIndex));
+
+            for (var i = 0; i < _size; ++i)
+            {
+                array[arrayIndex+i] = _ring[Index(i)];
+            }
+        }
+        public int IndexOf(T item)
+        {
+            for (var i = 0; i < _size; ++i)
+            {
+                if (_comparer.Equals(_ring[Index(i)], item)) 
+                    return i;
+            }
+            return -1;
+        }
+
+        public void Insert(int idx, T item)
+        {
+            Insert(idx, in item);
+        }
+        public void Insert(int idx, in T item)
+        {
+            if (idx < 0 || idx > _size) throw new ArgumentException("index is not a valid index in the IList<T>.", nameof(idx));
+
+            EnsureCapacity(); // resize if needed
+            var slot = Index(idx);
+            int j;
+            for (var i = _end; i != slot; i = j) 
+            { // move all elements one slot backward
+                j = Prev(i);
+                _ring[i] = _ring[j];
+            }
+            _ring[slot] = item; // store item at idx
+            _end = Next(_end);
+            _size++;
+        }
+       
+        public void RemoveAt(int idx)
+        {
+            if (idx < 0 || idx >= _size) throw new ArgumentException("index is not a valid index in the IList<T>.", nameof(idx));
+            _end = Prev(_end);
+            var j = Index(idx);
+            for (var i = j; j != _end; i = j)
+            { // move all elements one slot forward
+                j = Next(i);
+                _ring[i] = _ring[j];
+            }
+            _size--;        
+        }
+
+        public void RemoveAtBySwapEnd(int idx)
+        {
+            if (idx < 0 || idx >= _size) throw new ArgumentException("index is not a valid index in the IList<T>.", nameof(idx));
+            
+            _end = Prev(_end);
+            _ring[Index(idx)] = _ring[_end];
+            _size--;
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()  => new Enumerator(this);
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => new Enumerator(this);
+        public Enumerator GetEnumerator() => new Enumerator(this);
+
+        public struct Enumerator : IEnumerator<T>
+        {
+            ArrayDeque<T> _deque;
+            int _index;
+            public Enumerator(ArrayDeque<T> deque)
+            {
+                _deque = deque;
+                _index = -1;
+            }
+            public T Current => _deque._ring[_deque.Index(_index)];
+            object System.Collections.IEnumerator.Current => _deque._ring[_deque.Index(_index)];
+            public void Dispose() {}
+            public bool MoveNext() => ++_index < _deque.Count;
+            public void Reset() => _index = -1;
+        }
+
     }
 }
