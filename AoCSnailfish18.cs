@@ -134,9 +134,8 @@ class AoCSnailfish18 : AdventOfCode
         {
             _reducing = this;
             ScanDepth();
-            while (true)
-                if (!CheckExplosion() && !CheckSplit())
-                    break;
+            while (CheckExplosion() || CheckSplit())
+                ;
             _reducing = null;
         }
 
