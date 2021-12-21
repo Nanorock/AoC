@@ -30,8 +30,8 @@ class AoCSnailfish18 : AdventOfCode
                 var magnitude = addition.GetMagnitude();
                 if (magnitude > maxMagnitude)
                     maxMagnitude = magnitude;
-                ParseNumberFromFile(i);
-                ParseNumberFromFile(j);
+                _numbers[i] = new Number(inputFile[i]);
+                _numbers[j] = new Number(inputFile[j]);
             }
         }
         Console.WriteLine($"Highest magnitude {maxMagnitude}");
@@ -45,20 +45,17 @@ class AoCSnailfish18 : AdventOfCode
         for (int i = 0; i < inputFile.Length; i++)
             _numbers[i] = new Number(inputFile[i]);
     }
-    void ParseNumberFromFile(int i)
-    {
-        _numbers[i] = new Number(inputFile[i]);
-    }
 
 
     class Number
     {
         public int Value;
-        public bool IsValue => X == null && Y == null;
-
+        
         public Number? X;
         public Number? Y;
-        public bool IsAtomic => !IsValue && X.IsValue && Y.IsValue;
+        
+        public bool IsAtomic;// => !IsValue && X.IsValue && Y.IsValue;
+        public bool IsValue;// => X == null && Y == null;
 
         public Number? Parent;
         public int Depth;
@@ -69,6 +66,7 @@ class AoCSnailfish18 : AdventOfCode
         {
             Value = value;
             Parent = parent;
+            IsValue = true;
         }
         public Number(string parse, Number parent = null)
         {
@@ -95,11 +93,13 @@ class AoCSnailfish18 : AdventOfCode
             }
             X = new Number(content[..comma],this);
             Y = new Number(content[(comma+1)..],this);
+            IsAtomic = X.IsValue && Y.IsValue;
             Parent = parent;
         }
         void ParseNumber(string parse)
         {
             Value = int.Parse(parse);
+            IsValue = true;
         }
 
         public Number(Number a, Number b)
@@ -139,14 +139,20 @@ class AoCSnailfish18 : AdventOfCode
         bool Explode()
         {
             if (!IsAtomic || Depth < 4) return false;
+
             var values = GetValues();
             int myX = values.FindIndex((n) => n == X);
             if (myX > 0) values[myX - 1].Value += X.Value;
-            int myY = values.FindIndex((n) => n == Y);
+            int myY = myX + 1;
             if (myY < values.Count - 1) values[myY + 1].Value += Y.Value;
             
             X = Y = null;
             Value = 0;
+            IsValue = true;
+            IsAtomic = false;
+            if (Parent.X.IsValue && Parent.Y.IsValue)
+                Parent.IsAtomic = true;
+
             return true;
         }
 
@@ -162,6 +168,8 @@ class AoCSnailfish18 : AdventOfCode
             X.Depth = Depth + 1;
             Y = new Number((int)Math.Ceiling(Value * 0.5f), this);
             Y.Depth = Depth + 1;
+            IsValue = false;
+            IsAtomic = true;
             return true;
         }
 

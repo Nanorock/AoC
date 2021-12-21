@@ -1,6 +1,7 @@
 ﻿
 using System.Diagnostics;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 
 namespace AdventOfCode_2021
 {
@@ -8,7 +9,9 @@ namespace AdventOfCode_2021
     {
         static void Main(string[] args)
         {
-            RunLatest(false);
+            WatchRun(18);
+            //WatchRun(19);
+            //RunLatest(true);
             //WatchRunAll();
             while(true)
                 Console.ReadLine();
@@ -84,24 +87,26 @@ namespace AdventOfCode_2021
         {
             if (AoCs.TryGetValue(aocDay, out var aoc))
             {
-                aoc.SetInput(example);
+                aoc.SetInput(aocDay, example);
                 return aoc;
             }
             return null;
         }
-        
-        protected string[] inputFile;
-        void SetInput(bool example = false)
-        {
-            string number = "";
-            string name = GetType().Name;
-            for (int i = 0; i < name.Length; i++)
-                if (char.IsDigit(name[i]))
-                    number += name[i];
 
-            string file = $"C:/Users/Nanorock/source/repos/AoC2021/INPUT/aoc_{number}";
-            if (example) file += "_ex";
-            inputFile = File.ReadAllLines($"{file}.txt");
+        int _day;
+        bool _example;
+        protected string[] inputFile;
+        void SetInput(int day,bool example = false)
+        {
+            _day = day;
+            _example = example;
+            inputFile = File.ReadAllLines(GetFilePath());
+        }
+        protected string GetFilePath()
+        {
+            string file = $"C:/Users/Nanorock/source/repos/AoC2021/INPUT/aoc_{_day}";
+            if (_example) file += "_ex";
+            return $"{file}.txt";
         }
 
 

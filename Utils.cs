@@ -12,7 +12,7 @@ namespace AdventOfCode_2021
     }
     public static class ListEx
     {
-        public static void Intersect<T>(this List<T> list, List<T> values)
+        public static void RemoveIntersect<T>(this List<T> list, List<T> values)
         {
             var hash = HashCache<T>.Value;
             for (int i = 0; i < values.Count; i++)
