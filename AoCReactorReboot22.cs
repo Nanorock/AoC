@@ -4,14 +4,11 @@ class AoCReactorReboot22 : AdventOfCode
 {
     public override void Run1()
     {
-        HashSet<string> ons = new HashSet<string>();
         for (int i = 0; i < inputFile.Length; i++)
         {
             var input = inputFile[i];
             var command = ParseCommand(input);
-            if (command.Cube.MinX < -50 || command.Cube.MaxX > 50 || 
-                command.Cube.MinY < -50 || command.Cube.MaxY > 50 ||
-                command.Cube.MinZ < -50 || command.Cube.MaxZ > 50)
+            if (command.IsProcedure)
                 break;
             CommandProcess(command);
         }
@@ -25,12 +22,8 @@ class AoCReactorReboot22 : AdventOfCode
         {
             var input = inputFile[i];
             var command = ParseCommand(input);
-            if (command.Cube.MinX < -50 || command.Cube.MaxX > 50 || 
-                command.Cube.MinY < -50 || command.Cube.MaxY > 50 ||
-                command.Cube.MinZ < -50 || command.Cube.MaxZ > 50)
-            {
+            if (command.IsProcedure)
                 CommandProcess(command);
-            }
         }
 
         Console.WriteLine(CountCommands());
@@ -102,6 +95,10 @@ class AoCReactorReboot22 : AdventOfCode
         
         public bool DoOverlaps(in CommandCube cube) => Cube.DoOverlaps(cube.Cube);
         public Cube Overlaps(in CommandCube cube) => Cube.Overlaps(cube.Cube);
+
+        public bool IsProcedure => Cube.MinX < -50 || Cube.MaxX > 50 ||
+                                   Cube.MinY < -50 || Cube.MaxY > 50 ||
+                                   Cube.MinZ < -50 || Cube.MaxZ > 50;
     }
     
     readonly struct Cube
