@@ -19,14 +19,14 @@ class AoCAmphipod23 : AdventOfCode
     {
         var start = ParseBoard();
         var sw = Stopwatch.StartNew();
-        var bestMove = GetBestMove(start);
+        var bestMove = GetLowestEnergyMove(start);
         sw.Stop();
 
         Console.WriteLine($"Min cost {bestMove} in {sw.Elapsed.TotalMilliseconds}ms");
     }
 
     readonly List<Board> _possibleMoves = new List<Board>(64);
-    int GetBestMove(Board initialState)
+    int GetLowestEnergyMove(Board initialState)
     {
         var priorityQueue = new PriorityQueue<Board, int>();// Dijkstra
         priorityQueue.Enqueue(initialState, 0);
@@ -70,7 +70,9 @@ class AoCAmphipod23 : AdventOfCode
     
 
     const char Empty = default;
-    static char[] Amphipods = { 'A', 'B', 'C', 'D' };
+    static readonly char[] Amphipods = { 'A', 'B', 'C', 'D' };
+    static readonly int[] RoomHallId = { 2, 4, 6, 8 };
+    static readonly int[] AmphipodMoveCost = { 0, 1, 10, 100, 1000 };//A starts at 1
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static int GetAmphiId(char amphipod) => amphipod - 'A' + 1;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -112,7 +114,7 @@ class AoCAmphipod23 : AdventOfCode
             for (int i = _rooms.Count - 1; i >= 0; --i)
             {
                 if (RoomContainsOnlyValid(i)) continue;
-                int roomHallId = _roomHallId[i];
+                int roomHallId = RoomHallId[i];
                 var amphipod = PeekRoom(i);
                 GetPossiblesRoomHallMoves(amphipod, roomHallId, moves);
             }
@@ -150,8 +152,6 @@ class AoCAmphipod23 : AdventOfCode
                     moves.Add(GetRoomMove(amphipod, @from, roomId));
             }
         }
-
-        static List<int> _possiblePath = new List<int>(16);
         void GetPossiblesRoomHallMoves(char amphipod, int roomHallId, List<Board> moves)
         {
             int amphiId = GetAmphiId(amphipod);
@@ -185,7 +185,7 @@ class AoCAmphipod23 : AdventOfCode
         Board GetRoomMove(char amphipod, int from, int roomId)
         {
             int amphiId = GetAmphiId(amphipod);
-            int moveCost = _amphipodMoveCost[amphiId];
+            int moveCost = AmphipodMoveCost[amphiId];
             var hall = _hall;
             hall.Set(from, Empty);
             
@@ -194,7 +194,7 @@ class AoCAmphipod23 : AdventOfCode
             roomState += amphipod;
             rooms.Set(roomId, roomState);
 
-            int cost = 5 - roomState.Length + Math.Abs(from - _roomHallId[roomId]);
+            int cost = 5 - roomState.Length + Math.Abs(from - RoomHallId[roomId]);
             cost *= moveCost;
             
             return new Board(hall,rooms, Cost + cost);
@@ -202,7 +202,7 @@ class AoCAmphipod23 : AdventOfCode
         Board GetRoomToHallMove(char amphipod, int roomHallId, int toHallId)
         {
             int amphiId = GetAmphiId(amphipod);
-            int moveCost = _amphipodMoveCost[amphiId];
+            int moveCost = AmphipodMoveCost[amphiId];
 
             var hall = _hall;
             hall.Set(roomHallId, Empty);
@@ -221,7 +221,7 @@ class AoCAmphipod23 : AdventOfCode
         Board GetRoomToRoomMove(char amphipod, int roomHallId, int toHallId)
         {
             int amphiId = GetAmphiId(amphipod);
-            int moveCost = _amphipodMoveCost[amphiId];
+            int moveCost = AmphipodMoveCost[amphiId];
             
             int roomId = roomHallId / 2 - 1;
             var rooms = _rooms;
@@ -252,11 +252,6 @@ class AoCAmphipod23 : AdventOfCode
         public override string ToString() => $"{_hall[0]}{_hall[1]}{_hall[2]}{_hall[3]}{_hall[4]}{_hall[5]}{_hall[6]}{_hall[7]}{_hall[8]}{_hall[9]}{_hall[10]}/{_rooms[0]}/{_rooms[1]}/{_rooms[2]}/{_rooms[3]}/{Cost}";
     }
 
-    static int[] _roomHallId = { 2, 4, 6, 8 };
-    static int[] _pauseHallId = { 0, 1, 3, 5, 7, 9, 10 };
-    static int[] _amphipodMoveCost = { 0, 1, 10, 100, 1000 };
-    static int[] _amphipodRoom = { 0, 0, 1, 2, 3 };
-    
 }
 
 
