@@ -19,14 +19,14 @@ class AoCAmphipod23 : AdventOfCode
     {
         var start = ParseBoard();
         var sw = Stopwatch.StartNew();
-        var bestMove = GetLowestEnergyMove(start);
+        var lowestEnergy = GetLowestEnergyWin(start);
         sw.Stop();
 
-        Console.WriteLine($"Min cost {bestMove} in {sw.Elapsed.TotalMilliseconds}ms");
+        Console.WriteLine($"Lowest energy {lowestEnergy} in {sw.Elapsed.TotalMilliseconds}ms");
     }
 
     readonly List<Board> _possibleMoves = new List<Board>(64);
-    int GetLowestEnergyMove(Board initialState)
+    int GetLowestEnergyWin(Board initialState)
     {
         var priorityQueue = new PriorityQueue<Board, int>();// Dijkstra
         priorityQueue.Enqueue(initialState, 0);
@@ -36,9 +36,7 @@ class AoCAmphipod23 : AdventOfCode
             if (!visited.Add(node.GetHashCode()))
                 continue;
             if (node.Wins())
-            {
                 return node.Cost;
-            }
 
             _possibleMoves.Clear();
             node.GetPossiblesMoves(_possibleMoves);
@@ -46,21 +44,10 @@ class AoCAmphipod23 : AdventOfCode
             for (int i = 0; i < _possibleMoves.Count; i++)
             {
                 var mode = _possibleMoves[i];
-                //_froms[mode] = chain;
                 priorityQueue.Enqueue(mode,mode.Cost);
             }
         }
         return int.MaxValue;
-    }
-
-    Dictionary<Board, Chain> _froms = new Dictionary<Board, Chain>();
-    class Chain
-    {
-        public Chain Previous;
-        public Chain Next;
-
-        public Board Board;
-        public override string ToString() => Board.ToString();
     }
 
     Board ParseBoard()
@@ -128,24 +115,24 @@ class AoCAmphipod23 : AdventOfCode
         }
         void GetPossiblesRoomMoves(List<Board> moves)
         {
-            GetPossiblesRoomMoves(moves, (c)=>c=='D');
+            SearchPossiblesRoomMoves(moves, (c)=>c=='D');
             if (moves.Count > 0) return;
-            GetPossiblesRoomMoves(moves, (_)=>true);
+            SearchPossiblesRoomMoves(moves);
         }
 
-        void GetPossiblesRoomMoves(List<Board> moves, Func<char,bool> filter)
+        void SearchPossiblesRoomMoves(List<Board> moves, Func<char,bool> filter = null)
         {
             for (int i = 0; i < _rooms.Count; ++i)
             {
                 if (RoomContainsOnlyValid(i)) continue;
                 int roomHallId = RoomHallId[i];
                 var amphipod = PeekRoom(i);
-                if(filter(amphipod))
+                if(filter == null || filter(amphipod))
                     GetPossiblesRoomHallMoves(amphipod, roomHallId, moves);
             }
         }
 
-        public bool RoomContainsOnlyValid(int id)
+        bool RoomContainsOnlyValid(int id)
         {
             var r = _rooms[id];
             var validChar = Amphipods[id];
@@ -154,7 +141,8 @@ class AoCAmphipod23 : AdventOfCode
                     return false;
             return true;
         }
-        public char PeekRoom(int id) => _rooms[id][^1];
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        char PeekRoom(int id) => _rooms[id][^1];
         
         void GetPossiblesHallToRoomMoves(char amphipod, int from, List<Board> moves)
         {
