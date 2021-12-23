@@ -36,19 +36,33 @@ class AoCAmphipod23 : AdventOfCode
             if (!visited.Add(node.GetHashCode()))
                 continue;
             if (node.Wins())
+            {
                 return node.Cost;
-            
+            }
+
             _possibleMoves.Clear();
             node.GetPossiblesMoves(_possibleMoves);
+            
             for (int i = 0; i < _possibleMoves.Count; i++)
             {
                 var mode = _possibleMoves[i];
+                //_froms[mode] = chain;
                 priorityQueue.Enqueue(mode,mode.Cost);
             }
         }
         return int.MaxValue;
     }
-    
+
+    Dictionary<Board, Chain> _froms = new Dictionary<Board, Chain>();
+    class Chain
+    {
+        public Chain Previous;
+        public Chain Next;
+
+        public Board Board;
+        public override string ToString() => Board.ToString();
+    }
+
     Board ParseBoard()
     {
         string[] roomStates = new string[4];
@@ -65,11 +79,14 @@ class AoCAmphipod23 : AdventOfCode
         ValueArray4<string> rooms = default;
         for (int i = 0; i < 4; i++)
             rooms.Set(i,roomStates[i]);
-        return new Board(default, rooms, 0);
+        ValueArray11<char> defaultHall = default;
+        for (int i = 0; i < defaultHall.Count; i++)
+            defaultHall.Set(i,Empty);
+        return new Board(defaultHall, rooms, 0);
     }
     
 
-    const char Empty = default;
+    const char Empty = '.';
     static readonly char[] Amphipods = { 'A', 'B', 'C', 'D' };
     static readonly int[] RoomHallId = { 2, 4, 6, 8 };
     static readonly int[] AmphipodMoveCost = { 0, 1, 10, 100, 1000 };//A starts at 1
@@ -111,15 +128,23 @@ class AoCAmphipod23 : AdventOfCode
         }
         void GetPossiblesRoomMoves(List<Board> moves)
         {
-            for (int i = _rooms.Count - 1; i >= 0; --i)
+            GetPossiblesRoomMoves(moves, (c)=>c=='D');
+            if (moves.Count > 0) return;
+            GetPossiblesRoomMoves(moves, (_)=>true);
+        }
+
+        void GetPossiblesRoomMoves(List<Board> moves, Func<char,bool> filter)
+        {
+            for (int i = 0; i < _rooms.Count; ++i)
             {
                 if (RoomContainsOnlyValid(i)) continue;
                 int roomHallId = RoomHallId[i];
                 var amphipod = PeekRoom(i);
-                GetPossiblesRoomHallMoves(amphipod, roomHallId, moves);
+                if(filter(amphipod))
+                    GetPossiblesRoomHallMoves(amphipod, roomHallId, moves);
             }
         }
-        
+
         public bool RoomContainsOnlyValid(int id)
         {
             var r = _rooms[id];
