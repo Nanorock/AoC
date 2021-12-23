@@ -11,6 +11,7 @@ namespace AdventOfCode_2021
     {
         public static HashSet<T> Value = new HashSet<T>();
     }
+
     public static class ListEx
     {
         public static void RemoveIntersect<T>(this List<T> list, List<T> values)
@@ -25,6 +26,7 @@ namespace AdventOfCode_2021
 
             hash.Clear();
         }
+
         public static void RemoveIntersect<T>(this List<T> list, IEnumerable<T> values)
         {
             var hash = HashCache<T>.Value;
@@ -42,9 +44,11 @@ namespace AdventOfCode_2021
         {
         }
     }
+
     public static class EnumerableExt
     {
         static StringBuilder _sb = new StringBuilder();
+
         public static string ToString<T>(this IEnumerable<T> list, char separator)
         {
             _sb.Clear();
@@ -53,6 +57,7 @@ namespace AdventOfCode_2021
                 _sb.Append(t.ToString());
                 _sb.Append(separator);
             }
+
             var ret = _sb.ToString();
             return ret.Substring(0, ret.Length - 1);
         }
@@ -67,6 +72,7 @@ namespace AdventOfCode_2021
                 ret = ret.RemoveChar(remove[i]);
             return ret;
         }
+
         public static string RemoveChar(this string input, char remove)
         {
             for (int i = input.Length - 1; i >= 0; i--)
@@ -74,6 +80,7 @@ namespace AdventOfCode_2021
                     return input.Remove(i, 1);
             return input;
         }
+
         public static string OrderAlpha(this string input) => string.Concat(input.OrderBy(c => c));
 
         public static bool Has(this string input, HashSet<char> chars)
@@ -84,6 +91,7 @@ namespace AdventOfCode_2021
                     ++match;
             return match == chars.Count;
         }
+
         public static bool Has(this string input, string other)
         {
             int match = 0;
@@ -98,6 +106,7 @@ namespace AdventOfCode_2021
     {
         static readonly string[] _rainbowColors = { "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta" };
         public static string GetBlock(string color) => $"<{color}>";
+
         public static void PrintLine(string formatted)
         {
             if (string.IsNullOrEmpty(formatted)) return;
@@ -107,6 +116,7 @@ namespace AdventOfCode_2021
                 PrintDirectLine(formatted);
                 return;
             }
+
             int colorCodeEnd = formatted.IndexOf('>');
             if (colorCodeEnd < 0)
             {
@@ -119,19 +129,21 @@ namespace AdventOfCode_2021
 
             while (colorCodeStart >= 0 && colorCodeEnd >= 0)
             {
-                var colorStr = formatted.Substring(colorCodeStart+1, colorCodeEnd - colorCodeStart - 1);
+                var colorStr = formatted.Substring(colorCodeStart + 1, colorCodeEnd - colorCodeStart - 1);
                 Console.ForegroundColor = StrColors[colorStr];
                 formatted = formatted.Substring(colorCodeEnd + 1);
-                
+
                 colorCodeStart = formatted.IndexOf('<');
                 colorCodeEnd = formatted.IndexOf('>');
                 PrintDirect(colorCodeStart < 0 ? formatted : formatted.Substring(0, colorCodeStart));
             }
+
             Console.WriteLine();
             Console.ResetColor();
         }
 
         static int _rainbows;
+
         public static void RainbowLine(string raw)
         {
             int start = _rainbows += 2;
@@ -141,11 +153,19 @@ namespace AdventOfCode_2021
             PrintLine(formated);
         }
 
-        static void PrintDirect(string direct) { Console.Write(direct); }
-        static void PrintDirectLine(string direct) { Console.WriteLine(direct); }
-        
+        static void PrintDirect(string direct)
+        {
+            Console.Write(direct);
+        }
+
+        static void PrintDirectLine(string direct)
+        {
+            Console.WriteLine(direct);
+        }
+
         static ConsoleColor[] _colors = (ConsoleColor[])Enum.GetValues(typeof(ConsoleColor));
         static Dictionary<string, ConsoleColor> _strColors;
+
         static Dictionary<string, ConsoleColor> StrColors
         {
             get
@@ -157,6 +177,7 @@ namespace AdventOfCode_2021
                     for (int i = 0; i < _colors.Length; i++)
                         _strColors[_colors[i].ToString()] = _colors[i];
                 }
+
                 return _strColors;
             }
         }
@@ -197,11 +218,12 @@ namespace AdventOfCode_2021
             this.x = x;
             this.y = y;
         }
+
         public bool IsZero()
         {
             return x == 0 && y == 0;
         }
-       
+
         public void SetToZero()
         {
             this.x = this.y = 0;
@@ -224,6 +246,7 @@ namespace AdventOfCode_2021
             this.x += x;
             this.y += y;
         }
+
         public void Add(int x, int y, int z)
         {
             this.x += x;
@@ -267,20 +290,22 @@ namespace AdventOfCode_2021
         {
             return this.x * other.x + this.y * other.y;
         }
-        
+
         public int LengthSquared()
         {
             return x * x + y * y;
         }
+
         public double Length()
         {
             return Math.Sqrt(LengthSquared());
         }
+
         public float Lengthf()
         {
             return (float)Math.Sqrt(LengthSquared());
         }
-                
+
         public int DistanceSquared(Vector2i other)
         {
             int dx = other.x - x;
@@ -305,15 +330,18 @@ namespace AdventOfCode_2021
         }
 
         public Vector2i To90DegreeCcw()
-        => new Vector2i(-y, x);
+            => new Vector2i(-y, x);
+
         public Vector2i To90DegreeCw()
-        => new Vector2i(y, -x);
+            => new Vector2i(y, -x);
+
         public void Rotate90DegreeCcw()
         {
             int tmp = x;
             x = -y;
             y = tmp;
         }
+
         public void Rotate90DegreeCw()
         {
             int tmp = x;
@@ -337,7 +365,7 @@ namespace AdventOfCode_2021
             int d = p.Dot(perp);
             return Math.Sign(d);
         }
-        
+
         public override bool Equals(object obj)
         {
             // If parameter is null return false.
@@ -352,8 +380,10 @@ namespace AdventOfCode_2021
             {
                 return false;
             }
+
             return this == v;
         }
+
         public bool Equals(Vector2i other)
         {
             return this == other;
@@ -383,8 +413,12 @@ namespace AdventOfCode_2021
             {
                 switch (i)
                 {
-                    case 0: x = value; break;
-                    case 1: y = value; break;
+                    case 0:
+                        x = value;
+                        break;
+                    case 1:
+                        y = value;
+                        break;
                     default: throw new IndexOutOfRangeException("Index " + i + " is out of " + GetType() + " Range");
                 }
             }
@@ -409,20 +443,21 @@ namespace AdventOfCode_2021
         public static Vector2i operator /(Vector2i a, int scale) => new Vector2i(a.x / scale, a.y / scale);
 
         public static bool operator ==(Vector2i a, Vector2i b) => a.x == b.x && a.y == b.y;
-        public static bool operator !=(Vector2i a, Vector2i b) => !( a == b );
+        public static bool operator !=(Vector2i a, Vector2i b) => !(a == b);
         public static bool operator <(Vector2i a, Vector2i b) => a.LengthSquared() < b.LengthSquared();
         public static bool operator <=(Vector2i a, Vector2i b) => a.LengthSquared() <= b.LengthSquared();
         public static bool operator >(Vector2i a, Vector2i b) => a.LengthSquared() > b.LengthSquared();
 
         public static bool operator >=(Vector2i a, Vector2i b) => a.LengthSquared() >= b.LengthSquared();
-        
+
         public override string ToString()
-        => $"{GetType().Name} ( {x.ToString() }; {y.ToString()})";
+            => $"{GetType().Name} ( {x.ToString()}; {y.ToString()})";
 
         public static Vector2i Min(Vector2i v1, Vector2i v2)
         {
             return new Vector2i(Math.Min(v1.x, v2.x), Math.Min(v1.y, v2.y));
         }
+
         public static Vector2i Max(Vector2i v1, Vector2i v2)
         {
             return new Vector2i(Math.Max(v1.x, v2.x), Math.Max(v1.y, v2.y));
@@ -432,16 +467,16 @@ namespace AdventOfCode_2021
         {
             return
                 !(box2Max.x <= box1Min.x || box2Min.x >= box1Max.x
-                || box2Max.y <= box1Min.y || box2Min.y >= box1Max.y);
+                                         || box2Max.y <= box1Min.y || box2Min.y >= box1Max.y);
         }
 
         public static bool DoBoundsOverlap(Vector2i location1, Vector2i bounds1, Vector2i location2, Vector2i bounds2)
         {
             return !(Math.Abs(location1.x - location2.x) >= 0.5f * (bounds1.x + bounds2.x)
-                  || Math.Abs(location1.y - location2.y) >= 0.5f * (bounds1.y + bounds2.y));
+                     || Math.Abs(location1.y - location2.y) >= 0.5f * (bounds1.y + bounds2.y));
         }
 
-        public readonly void Deconstruct(out int x, out int y) 
+        public readonly void Deconstruct(out int x, out int y)
         {
             x = this.x;
             y = this.y;
@@ -491,11 +526,12 @@ namespace AdventOfCode_2021
             this.y = y;
             this.z = z;
         }
+
         public bool IsZero()
         {
             return x == 0 && y == 0 && z == 0;
         }
-        
+
         public void SetToZero()
         {
             this.x = this.y = this.z = 0;
@@ -520,6 +556,7 @@ namespace AdventOfCode_2021
             this.x += x;
             this.y += y;
         }
+
         public void Add(int x, int y, int z)
         {
             this.x += x;
@@ -594,16 +631,18 @@ namespace AdventOfCode_2021
                 this.x * other.y - this.y * other.x
             );
         }
-        
-      
+
+
         public readonly int LengthSquared()
         {
             return x * x + y * y + z * z;
         }
+
         public double Length()
         {
             return Math.Sqrt(LengthSquared());
         }
+
         /*
         public float Lengthf()
         {
@@ -614,10 +653,12 @@ namespace AdventOfCode_2021
         {
             return x * x + y * y;
         }
+
         public double length2D()
         {
             return Math.Sqrt(LengthSquared());
         }
+
         /*
         public float Lengthf2D()
         {
@@ -644,6 +685,7 @@ namespace AdventOfCode_2021
         {
             return Math.Sqrt(DistanceSquared(other));
         }
+
         /*
         public float Distancef(Vector3i other)
         {
@@ -654,6 +696,7 @@ namespace AdventOfCode_2021
         {
             return Math.Sqrt(DistanceSquared2D(other));
         }
+
         /*
         public float Distancef2D(Vector3i other)
         {
@@ -674,6 +717,7 @@ namespace AdventOfCode_2021
         {
             return x >= y ? (x >= z ? x : z) : (y >= z ? y : z);
         }
+
         public int MaxComponent2D()
         {
             return x >= y ? x : y;
@@ -683,10 +727,12 @@ namespace AdventOfCode_2021
         {
             return x <= y ? (x <= z ? x : z) : (y <= z ? y : z);
         }
+
         public int MinComponent2D()
         {
             return x <= y ? x : y;
         }
+
 /*
         public UnityEngine.Vector3 ToLefthanded(UnityEngine.Vector3 lhVector3)
         {
@@ -695,7 +741,7 @@ namespace AdventOfCode_2021
             lhVector3.z = y;
             return lhVector3;
         }
-*/       
+*/
         public override bool Equals(object obj)
         {
             // If parameter is null return false.
@@ -710,8 +756,10 @@ namespace AdventOfCode_2021
             {
                 return false;
             }
+
             return this == v;
         }
+
         public bool Equals(Vector3i other)
         {
             return this == other;
@@ -742,25 +790,37 @@ namespace AdventOfCode_2021
             {
                 switch (i)
                 {
-                    case 0: x = value; break;
-                    case 1: y = value; break;
-                    case 2: z = value; break;
+                    case 0:
+                        x = value;
+                        break;
+                    case 1:
+                        y = value;
+                        break;
+                    case 2:
+                        z = value;
+                        break;
                     default: throw new IndexOutOfRangeException("Index " + i + " is out of " + GetType() + " Range");
                 }
             }
         }
 
-        public static Vector3i operator +(in Vector3i a, in Vector3i b) => new Vector3i(a.x + b.x, a.y + b.y, a.z + b.z);
+        public static Vector3i operator +(in Vector3i a, in Vector3i b) =>
+            new Vector3i(a.x + b.x, a.y + b.y, a.z + b.z);
 
-        public static Vector3i operator +(Vector3i a, int offset) => new Vector3i(a.x + offset, a.y + offset, a.z + offset);
+        public static Vector3i operator +(Vector3i a, int offset) =>
+            new Vector3i(a.x + offset, a.y + offset, a.z + offset);
 
-        public static Vector3i operator +(int offset, Vector3i a) => new Vector3i(offset + a.x, offset + a.y, offset + a.z);
+        public static Vector3i operator +(int offset, Vector3i a) =>
+            new Vector3i(offset + a.x, offset + a.y, offset + a.z);
 
-        public static Vector3i operator -(in Vector3i a, in Vector3i b) => new Vector3i(a.x - b.x, a.y - b.y, a.z - b.z);
+        public static Vector3i operator -(in Vector3i a, in Vector3i b) =>
+            new Vector3i(a.x - b.x, a.y - b.y, a.z - b.z);
 
-        public static Vector3i operator -(Vector3i a, int offset) => new Vector3i(a.x - offset, a.y - offset, a.z - offset);
+        public static Vector3i operator -(Vector3i a, int offset) =>
+            new Vector3i(a.x - offset, a.y - offset, a.z - offset);
 
-        public static Vector3i operator -(int offset, Vector3i a) => new Vector3i(offset - a.x, offset - a.y, offset - a.z);
+        public static Vector3i operator -(int offset, Vector3i a) =>
+            new Vector3i(offset - a.x, offset - a.y, offset - a.z);
 
         public static Vector3i operator *(Vector3i a, int scale) => new Vector3i(a.x * scale, a.y * scale, a.z * scale);
 
@@ -772,16 +832,16 @@ namespace AdventOfCode_2021
          * cross product
          */
         public static Vector3i operator *(Vector3i a, Vector3i b) => new Vector3i(
-                a.y * b.z - a.z * b.y,
-                a.z * b.x - a.x * b.z,
-                a.x * b.y - a.y * b.x
-            );
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x
+        );
 
 
         public static bool operator ==(in Vector3i a, in Vector3i b) => a.x == b.x && a.y == b.y && a.z == b.z;
-        public static bool operator !=(in Vector3i a, in Vector3i b) => !( a == b );
+        public static bool operator !=(in Vector3i a, in Vector3i b) => !(a == b);
         public static bool operator <(in Vector3i a, in Vector3i b) => a.LengthSquared() < b.LengthSquared();
-        public static bool operator <=(in Vector3i a,in Vector3i b) => a.LengthSquared() <= b.LengthSquared();
+        public static bool operator <=(in Vector3i a, in Vector3i b) => a.LengthSquared() <= b.LengthSquared();
         public static bool operator >(in Vector3i a, in Vector3i b) => a.LengthSquared() > b.LengthSquared();
 
         public static bool operator >=(in Vector3i a, in Vector3i b) => a.LengthSquared() >= b.LengthSquared();
@@ -796,6 +856,7 @@ namespace AdventOfCode_2021
         {
             return new Vector3i(Math.Min(v1.x, v2.x), Math.Min(v1.y, v2.y), Math.Min(v1.z, v2.z));
         }
+
         public static Vector3i Max(Vector3i v1, Vector3i v2)
         {
             return new Vector3i(Math.Max(v1.x, v2.x), Math.Max(v1.y, v2.y), Math.Max(v1.z, v2.z));
@@ -805,431 +866,37 @@ namespace AdventOfCode_2021
         {
             return
                 !(box2Max.x <= box1Min.x || box2Min.x >= box1Max.x
-                || box2Max.y <= box1Min.y || box2Min.y >= box1Max.y
-                || box2Max.z <= box1Min.z || box2Min.z >= box1Max.z);
+                                         || box2Max.y <= box1Min.y || box2Min.y >= box1Max.y
+                                         || box2Max.z <= box1Min.z || box2Min.z >= box1Max.z);
         }
+
         public static bool DoBoxesOverlap2D(Vector3i box1Min, Vector3i box1Max, Vector3i box2Min, Vector3i box2Max)
         {
             return
                 !(box2Max.x <= box1Min.x || box2Min.x >= box1Max.x
-                || box2Max.y <= box1Min.y || box2Min.y >= box1Max.y);
+                                         || box2Max.y <= box1Min.y || box2Min.y >= box1Max.y);
         }
 
         public static bool DoBoundsOverlap(Vector3i location1, Vector3i bounds1, Vector3i location2, Vector3i bounds2)
         {
             return !(Math.Abs(location1.x - location2.x) >= 0.5f * (bounds1.x + bounds2.x)
-                  || Math.Abs(location1.y - location2.y) >= 0.5f * (bounds1.y + bounds2.y)
-                  || Math.Abs(location1.z - location2.z) >= 0.5f * (bounds1.z + bounds2.z));
+                     || Math.Abs(location1.y - location2.y) >= 0.5f * (bounds1.y + bounds2.y)
+                     || Math.Abs(location1.z - location2.z) >= 0.5f * (bounds1.z + bounds2.z));
         }
 
         public static bool DoBoundsOverlap2D(Vector3i location1, Vector3i bounds1, Vector3i location2, Vector3i bounds2)
         {
             return !(Math.Abs(location1.x - location2.x) >= 0.5f * (bounds1.x + bounds2.x)
-                  || Math.Abs(location1.y - location2.y) >= 0.5f * (bounds1.y + bounds2.y));
+                     || Math.Abs(location1.y - location2.y) >= 0.5f * (bounds1.y + bounds2.y));
         }
 
         public readonly Vector2i ToVector2i => new Vector2i(x, y);
 
-        public readonly void Deconstruct(out int x, out int y, out int z) 
+        public readonly void Deconstruct(out int x, out int y, out int z)
         {
             x = this.x;
             y = this.y;
             z = this.z;
         }
-    }
-
-    [Serializable]
-    public class ArrayDeque<T> : IList<T>, IReadOnlyList<T>
-    {
-        int _begin,_end,_size,_capacity;
-        T[] _ring;
-        readonly IEqualityComparer<T> _comparer;
-
-        public ArrayDeque() : this(0) { }
-        public ArrayDeque(int initialCapacity) : this(initialCapacity, EqualityComparer<T>.Default) { }
-        public ArrayDeque(IEqualityComparer<T> comparer) : this(16, comparer) { }
-        public ArrayDeque(int initialCapacity, IEqualityComparer<T> comparer) {
-		    _capacity = initialCapacity;
-            _ring = _capacity == 0 ? Array.Empty<T>() : new T[_capacity];
-            _begin = _end = _size = 0;
-            _comparer = comparer;
-	    }
-
-        public ArrayDeque(ArrayDeque<T> other)
-        {
-            _capacity = other._capacity;
-            _ring = new T[_capacity];
-            Array.Copy(other._ring, _ring, other._size);
-            _begin = other._begin;
-            _end = other._end;
-            _size = other._size;
-            _comparer = other._comparer;
-        }
-
-        public T Get(int i) {
-		    return i >= 0 && i < _size ? _ring[Index(i)] : default;
-	    }
-
-        public void Set(int i, in T value)
-        {
-            if (i >= 0 && i < _size) 
-                _ring[Index(i)] = value;
-        }
-
-        public ref T GetRef(int i)
-        {
-            return ref _ring[Index(i >= 0 && i < _size ? i : _end)];
-        }
-
-        public T GetFirst() {
-		    return _size == 0 ? default : _ring[_begin];
-	    }
-        public ref T GetFirstRef()
-        {
-            return ref _ring[_begin];
-        }
-        public T GetLast() {
-            return _size == 0 ? default : _ring[Prev(_end)];
-	    }
-        public ref T GetLastRef()
-        {
-            return ref _ring[Prev(_end)];
-        }
-
-        public void Push(in T elem) { AddFirst(elem); }
-        public T Pop() { return RemoveFirst(); }
-        public T Peek() { return GetFirst(); }
-
-        public void Enqueue(in T elem) { AddLast(elem); }
-        public T Dequeue() { return RemoveFirst(); }
-
-        //public void Add(in T elem){ AddLast(elem); }
-        public void Add(T elem) { AddLast(elem); }
-
-        public bool AddIfNotContained(T elem) { if (Contains(elem)) return false; AddLast(elem); return true; }
-
-        public void AddLast(in T elem) {
-		    EnsureCapacity();
-		    _ring[_end] = elem;
-            _end = Next(_end);
-		    ++_size;	
-	    }
-
-	    public T RemoveLast() {
-		    if (_size==0) return default;
-            _end = Prev(_end);
-		    --_size;		
-		    return _ring[_end];
-	    }
-
-	    public void AddFirst(in T elem) {
-		    EnsureCapacity();				
-		    _begin = Prev(_begin);
-            _ring[_begin] = elem;		    			
-		    ++_size;	
-	    }
-
-	    public T RemoveFirst() {
-		    if (_size==0) return default;		
-		    var elem = _ring[_begin];
-            _begin = Next(_begin);
-		    --_size;		
-		    return elem;
-	    }
-
-	    public void Clear() {
-            _size = _begin = _end = 0;
-	    }
-        /*
-        private bool isEqual(object elem1, object elem2) {
-            return elem1 == elem2 || elem1 != null && elem1.Equals(elem2);
-        }
-        private bool isEqual(T elem1, T elem2)
-        {
-            //if (elem1 == elem2) return true;
-            return elem1 == null && elem2 == null || elem1 != null && elem1.Equals(elem2);
-        } 
-        */
-        /*
-        public bool Contains(T elem)
-        {
-            return Contains(in elem);
-        }
-        */
-        public bool Contains(T elem)
-        {
-            for (var i = _begin; i != _end; i = Next(i))
-            {
-                if (_comparer.Equals(_ring[i], elem))
-                    return true;
-            }
-            return false;
-        }
-
-        /*
-        public bool Remove(T elem)
-        {
-            return Remove(in elem);
-        }*/
-        public bool Remove(T elem)
-        {
-            for (var i = _begin; i != _end; i = Next(i))
-            {
-                if (_comparer.Equals(_ring[i], elem))
-                {
-                    _end = Prev(_end);
-                    int j;
-                    for (; i != _end; i = j)
-                    {
-                        j = Next(i);
-                        _ring[i] = _ring[j];
-                    }
-                    --_size;
-                    return true;
-                }
-            }
-            return false;
-        }
-        
-        public int FindIndex(Predicate<T> predicate)
-        {
-            for (var i = 0; i < _size; ++i)
-            {
-                if (predicate(_ring[Index(i)]))
-                {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
-        public bool RemoveFirst(Predicate<T> predicate)
-        {
-            if (_size == 0) return false;
-
-            for (var i = _begin; i != _end; i = Next(i))
-            {
-                if (predicate(_ring[i]))
-                {
-                    _end = Prev(_end);
-                    int j;
-                    for (; i != _end; i = j)
-                    {
-                        j = Next(i);
-                        _ring[i] = _ring[j];
-                    }
-                    --_size;
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public int RemoveAll(Predicate<T> match)
-        {
-            if (_size == 0) return 0;
-
-            var freeIndex = _begin;
-            while (freeIndex != _end && !match(_ring[freeIndex])) freeIndex = Next(freeIndex);
-            if (freeIndex == _end) return 0;
-
-            var removedCount = 1;
-            var current = Next(freeIndex);
-            while (true)
-            {
-                while (current != _end && match(_ring[current]))
-                {
-                    current = Next(current);
-                    removedCount++;
-                }
-                if (current != _end)
-                {
-                    _ring[freeIndex] = _ring[current];
-                    freeIndex = Next(freeIndex);
-                    current = Next(current);
-                }
-                else
-                    break;
-            }
-            var r = removedCount;
-            while (--r >= 0)
-                _end = Prev(_end);
-            _size -= removedCount;
-            return removedCount;
-        }
-
-        /*     
-        public T[] ToArray(T[] tofill = null)
-        { 
-            if (tofill == null)
-                tofill = new T[size];
-            for (int i = 0; i < size; ++i)
-            { 
-                tofill[i] = ring[index(i)];
-            }
-            return tofill;
-        }
-        */
-        public int Count => _size;
-
-        public bool IsEmpty() { return _size == 0; }
-
-        public int Capacity => _capacity;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        int Index(int i) => (_begin + i) % _capacity;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        int Next(int i) => (i + 1) % _capacity;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        int Prev(int i) => (i - 1 + _capacity) % _capacity;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void EnsureCapacity() {
-            if (_size + 1 >= _capacity)
-            { // size +1 to have always an unused element for the end pointer (alternative would need more case distinctions)
-                Resize(_capacity == 0 ? 8 :  (3 * _capacity + 1) >> 1);               
-		    }
-	    }
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        void Resize(int newCapacity)
-        {
-            var newRing = new T[newCapacity];
-            if (_begin <= _end)
-            {
-                Array.Copy(_ring, _begin, newRing, 0, _size);
-            }
-            else
-            {
-                var rightIntervalCount = _capacity - _begin;
-                Array.Copy(_ring, _begin, newRing, 0, rightIntervalCount);
-                Array.Copy(_ring, 0, newRing, rightIntervalCount, _end);
-            }
-            _capacity = newCapacity;
-            _ring = newRing;
-            _begin = 0;
-            _end = _size;
-        }
-
-        public void ResizeTo(int newCapacity)
-        {
-            Resize(Math.Max(newCapacity, _size));
-        }
-
-        /// Remaining Implementation of IList<T>
-        /// ------------------------------------
-
-        public bool IsReadOnly => false;
-
-        public T this[int i]
-        {
-            get => Get(i);
-            set => Set(i, value);
-        }
-        /*
-        public ref T this[int i]
-        {
-            get { return ref GetRef(i); }
-        }
-        */
-        public void AddRange(ArrayDeque<T> queue)
-        {
-            var cnt = queue.Count;
-            for (var i = 0; i < cnt; ++i)
-            {
-                AddLast(queue.Get(i));
-            }
-        }
-        public void AddRange(IEnumerable<T> source)
-        {            
-            foreach (var item in source)
-            {
-                AddLast(item);
-            }
-        }
-
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            if (array == null) throw new ArgumentNullException(nameof(array), "array is null");
-            if (arrayIndex < 0) throw new ArgumentOutOfRangeException(nameof(arrayIndex), "arrayIndex is less than 0.");
-            if (arrayIndex + array.Length < _size) throw new ArgumentException("The number of elements in the source ICollection<T> is greater than the available space from arrayIndex to the end of the destination array.", nameof(arrayIndex));
-
-            for (var i = 0; i < _size; ++i)
-            {
-                array[arrayIndex+i] = _ring[Index(i)];
-            }
-        }
-        public int IndexOf(T item)
-        {
-            for (var i = 0; i < _size; ++i)
-            {
-                if (_comparer.Equals(_ring[Index(i)], item)) 
-                    return i;
-            }
-            return -1;
-        }
-
-        public void Insert(int idx, T item)
-        {
-            Insert(idx, in item);
-        }
-        public void Insert(int idx, in T item)
-        {
-            if (idx < 0 || idx > _size) throw new ArgumentException("index is not a valid index in the IList<T>.", nameof(idx));
-
-            EnsureCapacity(); // resize if needed
-            var slot = Index(idx);
-            int j;
-            for (var i = _end; i != slot; i = j) 
-            { // move all elements one slot backward
-                j = Prev(i);
-                _ring[i] = _ring[j];
-            }
-            _ring[slot] = item; // store item at idx
-            _end = Next(_end);
-            _size++;
-        }
-       
-        public void RemoveAt(int idx)
-        {
-            if (idx < 0 || idx >= _size) throw new ArgumentException("index is not a valid index in the IList<T>.", nameof(idx));
-            _end = Prev(_end);
-            var j = Index(idx);
-            for (var i = j; j != _end; i = j)
-            { // move all elements one slot forward
-                j = Next(i);
-                _ring[i] = _ring[j];
-            }
-            _size--;        
-        }
-
-        public void RemoveAtBySwapEnd(int idx)
-        {
-            if (idx < 0 || idx >= _size) throw new ArgumentException("index is not a valid index in the IList<T>.", nameof(idx));
-            
-            _end = Prev(_end);
-            _ring[Index(idx)] = _ring[_end];
-            _size--;
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()  => new Enumerator(this);
-        IEnumerator<T> IEnumerable<T>.GetEnumerator() => new Enumerator(this);
-        public Enumerator GetEnumerator() => new Enumerator(this);
-
-        public struct Enumerator : IEnumerator<T>
-        {
-            ArrayDeque<T> _deque;
-            int _index;
-            public Enumerator(ArrayDeque<T> deque)
-            {
-                _deque = deque;
-                _index = -1;
-            }
-            public T Current => _deque._ring[_deque.Index(_index)];
-            object System.Collections.IEnumerator.Current => _deque._ring[_deque.Index(_index)];
-            public void Dispose() {}
-            public bool MoveNext() => ++_index < _deque.Count;
-            public void Reset() => _index = -1;
-        }
-
     }
 }

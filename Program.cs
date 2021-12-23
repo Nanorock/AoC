@@ -9,10 +9,10 @@ namespace AdventOfCode_2021
     {
         static void Main(string[] args)
         {
-            WatchRun(18);
+            //WatchRun(18);
             //WatchRun(19);
-            //RunLatest(true);
-            //WatchRunAll();
+            //RunLatest(false);
+            WatchRunAll();
             while(true)
                 Console.ReadLine();
         }
