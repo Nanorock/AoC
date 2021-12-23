@@ -252,10 +252,10 @@ namespace AdventOfCode_2021
 
 
         int[] _costFromStart;
-        PriorityQueue _priorityQueue;
+        PriorityQueue<int>? _priorityQueue;
         public bool AStar(int start, int goal, List<int> result)
         {
-            _priorityQueue = _priorityQueue ??= new PriorityQueue();
+            _priorityQueue = _priorityQueue ??= new PriorityQueue<int>();
             _priorityQueue.Reset();
             
             _costFromStart ??= new int[_board.Length];
@@ -314,32 +314,33 @@ namespace AdventOfCode_2021
             res.Reverse();
         }
     }
-    class PriorityQueue
+    class PriorityQueue<T>
     {
         readonly List<int> _priorities = new List<int>();
-        readonly Dictionary<int, List<int>> _prioToIds = new Dictionary<int, List<int>>();
-        public void Enqueue(int id, int priority)
+        readonly Dictionary<int, List<T>> _prioToIds = new Dictionary<int, List<T>>();
+        public void Enqueue(T id, int priority)
         {
             if (!_prioToIds.TryGetValue(priority, out var ids))
             {
-                _prioToIds[priority] = ids = new List<int>();
+                _prioToIds[priority] = ids = new List<T>();
                 _priorities.Add(priority);
-                _priorities.Sort((a, b) => b.CompareTo(a));
+                _priorities.Sort(/*(a, b) => b.CompareTo(a)*/);
+                _priorities.Reverse();
             }
             ids.Add(id);
         }
         
-        public bool TryDequeue(out int elt)
+        public bool TryDequeue(out T elt)
         {
             if (_priorities.Count == 0)
             {
-                elt = 0;
+                elt = default;
                 return false;
             }
 
-            var prio = _priorities[_priorities.Count-1];
+            var prio = _priorities[^1];
             var ids = _prioToIds[prio];
-            elt = ids[ids.Count - 1];
+            elt = ids[^1];
             ids.RemoveAt(ids.Count - 1);
             if (ids.Count == 0)
             {

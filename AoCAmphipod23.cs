@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -26,75 +27,39 @@ class AoCAmphipod23 : AdventOfCode
     {
         
         var start = ParseBoard();
-        int currentBestScore = int.MaxValue;
+        var sw = Stopwatch.StartNew();
         var bestMove = GetBestMove(start);
-        Console.WriteLine(bestMove);
+        sw.Stop();
+
+        Console.WriteLine($"Min cost {bestMove} in {sw.Elapsed.TotalMilliseconds}ms");
     }
 
     List<Board> _possibleMoves = new List<Board>();
     int GetBestMove(Board initialState)
     {
-        // Dijkstra on the graph
-        var priorityQueue = new PriorityQueue<Board, int>();
+        var priorityQueue = new PriorityQueue<Board, int>();// Dijkstra
         priorityQueue.Enqueue(initialState, 0);
-        var visited = new HashSet<string>();
-        while (priorityQueue.Count > 0)
+        var visited = new HashSet<int>();
+        while (priorityQueue.TryDequeue(out var node, out _))
         {
-            var node = priorityQueue.Dequeue();
-
-            if (!visited.Add(node.GetHash()))
+            if (!visited.Add(node.GetHashCode()))
                 continue;
             if (node.Wins())
                 return node.Cost;
             
             _possibleMoves.Clear();
             node.GetPossiblesMoves(_possibleMoves);
-            priorityQueue.EnqueueRange(_possibleMoves.Select(n => (n, n.Cost)));
+            for (int i = 0; i < _possibleMoves.Count; i++)
+            {
+                var mode = _possibleMoves[i];
+                priorityQueue.Enqueue(mode,mode.Cost);
+            }
         }
-
-        throw new Exception("Impossible to organize");
+        return int.MaxValue;
     }
-
-    static Dictionary<string, int> _cacheStates = new Dictionary<string, int>();
-    int GetBestMove(in Board board, int cost, ref int currentBestScore)
-    {
-        if (board.Wins())
-        {
-            if (cost < currentBestScore)
-                currentBestScore = cost;
-            return cost;
-        }
-
-        if (_cacheStates.TryGetValue(board.ToString(), out var previousCost))
-        {
-            if (cost > previousCost)
-                return int.MaxValue;
-            _cacheStates[board.ToString()] = cost;
-        }
-        else _cacheStates.Add(board.ToString(), cost);
-
-        //Might has well give up !
-        if(cost>currentBestScore)
-            return int.MaxValue;
-
-        List<Board> moves = new List<Board>();
-        board.GetPossiblesMoves(moves);
-        
-        int bestMoves = int.MaxValue;
-        for (int i = 0; i < moves.Count; i++)
-        {
-            var move = moves[i];
-            var bestMove = GetBestMove(moves[i],cost+move.Cost, ref currentBestScore);
-            if (bestMove < bestMoves)
-                bestMoves = bestMove;
-        }
-        return bestMoves;
-    }
-
-
+    
     Board ParseBoard()
     {
-        Board board = new Board();
         string[] roomStates = new string[4];
         for (int i = 0; i < 4; i++)
             roomStates[i] = "";
@@ -109,22 +74,25 @@ class AoCAmphipod23 : AdventOfCode
         ValueArray4<string> rooms = default;
         for (int i = 0; i < 4; i++)
             rooms.Set(i,roomStates[i]);
-        return new Board("...........", rooms, 0);
+        return new Board(default, rooms, 0);
     }
     
 
-    const char Empty = '.';
+    const char Empty = default;
     static char[] Amphipods = { 'A', 'B', 'C', 'D' };
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static int GetAmphiId(char amphipod) => amphipod - 'A' + 1;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    static bool IsRoomEntrance(int hallId) => hallId is 2 or 4 or 6 or 8;
+
     readonly struct Board
     {
-        public readonly string Hall;
+        public readonly ValueArray11<char> Hall;
         public readonly ValueArray4<string> Rooms;
         public readonly int Cost;
-
-        public string GetHash() => $"{Hall}{Rooms[0]}{Rooms[1]}{Rooms[2]}{Rooms[3]}/{Cost}";
-        public Board(string hall, ValueArray4<string> rooms, int cost)
+        
+        public override int GetHashCode() => HashCode.Combine(Hall,Rooms);
+        public Board(ValueArray11<char> hall, ValueArray4<string> rooms, int cost)
         {
             Hall = hall;
             Rooms = rooms;
@@ -138,11 +106,11 @@ class AoCAmphipod23 : AdventOfCode
                 GetPossiblesRoomMoves(moves);
         }
         
-        public bool IsRoomEntrance(int hallId) => hallId is 2 or 4 or 6 or 8;
+        
 
         void GetPossiblesHallToRoomMoves(List<Board> moves)
         {
-            for (int i = 0; i < Hall.Length; i++)
+            for (int i = Hall.Count - 1; i >= 0; --i)
             {
                 var amphipod = Hall[i];
                 if (amphipod == Empty) continue;
@@ -151,7 +119,7 @@ class AoCAmphipod23 : AdventOfCode
         }
         void GetPossiblesRoomMoves(List<Board> moves)
         {
-            for (int i = 0; i < Rooms.Count; i++)
+            for (int i = Rooms.Count - 1; i >= 0; --i)
             {
                 if (RoomContainsOnlyValid(i)) continue;
                 int roomHallId = _roomHallId[i];
@@ -183,7 +151,7 @@ class AoCAmphipod23 : AdventOfCode
                 if (roomId+1 == amphiId && RoomContainsOnlyValid(roomId)) 
                     moves.Add(GetRoomMove(amphipod, @from, roomId));
             }
-            for (int fwd = from+1; fwd < Hall.Length; fwd++)
+            for (int fwd = from+1; fwd < Hall.Count; fwd++)
             {
                 if (Hall[fwd] != Empty) break;
                 if (!IsRoomEntrance(fwd)) continue;
@@ -206,7 +174,7 @@ class AoCAmphipod23 : AdventOfCode
                         moves.Add(GetRoomToRoomMove(amphipod, roomHallId, rev));
                 }
             }
-            for (int fwd = roomHallId+1; fwd < Hall.Length; ++fwd)
+            for (int fwd = roomHallId+1; fwd < Hall.Count; ++fwd)
             {
                 if (Hall[fwd] != Empty) break;
                 if (!IsRoomEntrance(fwd))
@@ -224,9 +192,8 @@ class AoCAmphipod23 : AdventOfCode
         {
             int amphiId = GetAmphiId(amphipod);
             int moveCost = _amphipodMoveCost[amphiId];
-            var hall = Hall.ToCharArray();
-            hall[from] = Empty;
-            var hallState = new string(hall);
+            var hall = Hall;
+            hall.Set(from, Empty);
             
             var rooms = Rooms;    
             var roomState = Rooms[roomId];
@@ -237,17 +204,16 @@ class AoCAmphipod23 : AdventOfCode
             cost += 5 - roomState.Length;
             cost *= moveCost;
             
-            return new Board(hallState,rooms, Cost + cost);
+            return new Board(hall,rooms, Cost + cost);
         }
         Board GetRoomToHallMove(char amphipod, int roomHallId, int toHallId)
         {
             int amphiId = GetAmphiId(amphipod);
             int moveCost = _amphipodMoveCost[amphiId];
 
-            var hall = Hall.ToCharArray();
-            hall[roomHallId] = Empty;
-            hall[toHallId] = amphipod;
-            var hallState = new string(hall);
+            var hall = Hall;
+            hall.Set(roomHallId, Empty);
+            hall.Set(toHallId, amphipod);
             
             int roomId = roomHallId / 2 - 1;
             var rooms = Rooms;
@@ -258,7 +224,7 @@ class AoCAmphipod23 : AdventOfCode
             cost += Math.Abs(roomHallId - toHallId);
             cost *= moveCost;
             
-            return new Board(hallState, rooms, Cost + cost);
+            return new Board(hall, rooms, Cost + cost);
         }
         Board GetRoomToRoomMove(char amphipod, int roomHallId, int toHallId)
         {
@@ -284,7 +250,7 @@ class AoCAmphipod23 : AdventOfCode
 
         public bool Wins()
         {
-            for (int i = 0; i < Hall.Length; i++)
+            for (int i = 0; i < Hall.Count; i++)
                 if (Hall[i] != Empty)
                     return false;
             for (int i = 0; i < Rooms.Count; i++)

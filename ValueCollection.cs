@@ -92,7 +92,13 @@ public struct ValueArray11<T> : IValueCollection<T>, IEnumerable<T>
         return array;
     }
 
-    public override int GetHashCode() { return HashCode.Combine(HashCode.Combine(_0, _1, _2, _3, _4, _5),HashCode.Combine(_6, _7, _8, _9, _10)) ; }
+    public override int GetHashCode()
+    {
+        HashCode hash = new HashCode();
+        hash.Add(_0);hash.Add(_1);hash.Add(_2);hash.Add(_4);hash.Add(_5);hash.Add(_6);
+        hash.Add(_7);hash.Add(_8);hash.Add(_9);hash.Add(_10);
+        return hash.ToHashCode();
+    }
 
     readonly IEnumerator<T> IEnumerable<T>.GetEnumerator()
         => new Enumerator(this);
