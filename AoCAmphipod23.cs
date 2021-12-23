@@ -18,11 +18,8 @@ class AoCAmphipod23 : AdventOfCode
     public override void Run2()
     {
         var start = ParseBoard();
-        var sw = Stopwatch.StartNew();
         var lowestEnergy = GetLowestEnergyWin(start);
-        sw.Stop();
-
-        Console.WriteLine($"Lowest energy {lowestEnergy} in {sw.Elapsed.TotalMilliseconds}ms");
+        Console.WriteLine($"Lowest energy {lowestEnergy}");
     }
 
     readonly List<Board> _possibleMoves = new List<Board>(64);

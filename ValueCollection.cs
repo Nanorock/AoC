@@ -145,6 +145,137 @@ public struct ValueArray11<T> : IValueCollection<T>, IEnumerable<T>
         }
     }
 }
+[StructLayout(LayoutKind.Sequential)]
+public struct ValueArray7<T> : IValueCollection<T>, IEnumerable<T>
+{
+    public const int Length = 11;
+
+    public T _0, _1, _2, _3, _4, _5, _6;
+
+    public readonly int Count => Length;
+
+    // non reference indexer
+    public readonly T this[int index] => index switch
+    {
+        0 => _0,
+        1 => _1,
+        2 => _2,
+        3 => _3,
+        4 => _4,
+        5 => _5,
+        6 => _6,
+        _ => throw new ArgumentOutOfRangeException(nameof(index), index.ToString(),
+            $"index {index} is out of range [0..{Length}]")
+    };
+
+    public readonly bool Contains(in T elem)
+        => ValueCollections.Contains(in this, in elem);
+
+    public readonly bool Contains(in T elem, EqualityComparer<T> eq)
+        => ValueCollections.Contains(in this, in elem, eq);
+
+    public readonly bool Contains(in T elem, int start, int count)
+        => ValueCollections.Contains(in this, in elem, start, count);
+
+    public readonly bool Contains(in T elem, int start, int count, EqualityComparer<T> eq)
+        => ValueCollections.Contains(in this, in elem, start, count, eq);
+
+    public readonly int IndexOf(in T elem)
+        => ValueCollections.IndexOf(in this, in elem);
+
+    public readonly int IndexOf(in T elem, EqualityComparer<T> eq)
+        => ValueCollections.IndexOf(in this, in elem, eq);
+
+    public readonly int IndexOf(in T elem, int start, int count)
+        => ValueCollections.IndexOf(in this, in elem, start, count);
+
+    public readonly int IndexOf(in T elem, int start, int count, EqualityComparer<T> eq)
+        => ValueCollections.IndexOf(in this, in elem, start, count, eq);
+
+    public readonly int LastIndexOf(in T elem)
+        => ValueCollections.LastIndexOf(in this, in elem);
+
+    public readonly int LastIndexOf(in T elem, EqualityComparer<T> eq)
+        => ValueCollections.LastIndexOf(in this, in elem, eq);
+
+    public readonly int LastIndexOf(in T elem, int start, int count)
+        => ValueCollections.LastIndexOf(in this, in elem, start, count);
+
+    public readonly int LastIndexOf(in T elem, int start, int count, EqualityComparer<T> eq)
+        => ValueCollections.LastIndexOf(in this, in elem, start, count, eq);
+
+    public readonly int FindIndex(Predicate<T> pred)
+        => ValueCollections.FindIndex(in this, pred);
+
+    public readonly int FindIndex(Predicate<T> pred, int start, int count)
+        => ValueCollections.FindIndex(in this, pred, start, count);
+
+    public readonly int FindLastIndex(Predicate<T> pred)
+        => ValueCollections.FindLastIndex(in this, pred);
+
+    public readonly int FindLastIndex(Predicate<T> pred, int start, int count)
+        => ValueCollections.FindLastIndex(in this, pred, start, count);
+
+    public readonly T[] ToArray()
+    {
+        var array = new T[Length];
+        for (int i = 0; i < Length; ++i)
+            array[i] = this[i];
+        return array;
+    }
+
+    public override int GetHashCode()
+    {
+        HashCode hash = new HashCode();
+        hash.Add(_0);hash.Add(_1);hash.Add(_2);hash.Add(_4);hash.Add(_5);hash.Add(_6);
+        return hash.ToHashCode();
+    }
+
+    readonly IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        => new Enumerator(this);
+
+    readonly System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        => new Enumerator(this);
+
+    public readonly Enumerator GetEnumerator() // duck type the efficient struct-Enumerator
+        => new Enumerator(this);
+
+    [Serializable]
+    public struct Enumerator : IEnumerator<T>
+    {
+        private ValueArray7<T> _array;
+        private int _index;
+
+        internal Enumerator(ValueArray7<T> array)
+        {
+            _array = array;
+            _index = -1;
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public bool MoveNext()
+        {
+            if (_index + 1 == ValueArray11<T>.Length)
+                return false;
+            ++_index;
+            return true;
+        }
+
+        public T Current
+            => _array[_index];
+
+        object System.Collections.IEnumerator.Current
+            => Current;
+
+        void System.Collections.IEnumerator.Reset()
+        {
+            _index = -1;
+        }
+    }
+}
 
 [StructLayout(LayoutKind.Sequential)]
 public struct ValueArray4<T> : IValueCollection<T>, IEnumerable<T>
@@ -1035,6 +1166,28 @@ public static class ValueArrayExtensions
         array.Ref(index1) = array[index2];
         array.Ref(index2) = temp;
     }
+
+    // Setter to array indices (there can't be a ref returning mathod inside the struct, and a writable indexer would cause defeinsive copies, so use "Set" or "Ref" insted)
+    public static void Set<T>(ref this ValueArray7<T> array, int index, in T element)
+        => Ref(ref array, index) = element;
+    // writable ref to array index (there can't be a ref returning mathod inside the struct, and a writable indexer would cause defeinsive copies, so use "Set" or "Ref" insted)
+    public static ref T Ref<T>(ref this ValueArray7<T> array, int index)
+    {
+        switch (index)
+        {
+            case 0: return ref array._0;
+            case 1: return ref array._1;
+            case 2: return ref array._2;
+            case 3: return ref array._3;
+            case 4: return ref array._4;
+            case 5: return ref array._5;
+            case 6: return ref array._6;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(index), index.ToString(),
+                    $"index {index} is out of range [0..{array.Count}]");
+        }
+    }
+
 }
 
 public static class ValueListExtensions
