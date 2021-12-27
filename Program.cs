@@ -11,8 +11,8 @@ namespace AdventOfCode_2021
         {
             //WatchRun(18);
             //WatchRun(19);
-            RunLatest(false);
-            //WatchRunAll();
+            //RunLatest(false);
+            WatchRunAll();
             while(true)
                 Console.ReadLine();
         }

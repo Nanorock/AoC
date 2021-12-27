@@ -6,14 +6,14 @@ class AoCSeaCucumber25 : AdventOfCode
     public override void Run1()
     {
         BaseTilemap<char> tm = new BaseTilemap<char>(inputFile, c => c);
-        var printer = tm.GetPrinter((id,c) => "" + c);
-        WriteLine(printer.PrintState());
+        /*var printer = tm.GetPrinter((id,c) => "" + c);
+        WriteLine(printer.PrintState());*/
         int step = 1;
         while (ProgressBoard(tm))
         {
             ++step;
-            WriteLine("Step " + step);
-            WriteLine(printer.PrintState());
+            /*WriteLine("Step " + step);
+            WriteLine(printer.PrintState());*/
         }
         WriteLine($"Stopped at step {step}");
     }
