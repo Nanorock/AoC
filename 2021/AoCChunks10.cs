@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using AdventOfCodes;
+
 namespace AdventOfCode_2021
 {
     class AoCChunks10 : AdventOfCode

@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using AdventOfCodes;
 
 namespace AdventOfCode_2021;
 

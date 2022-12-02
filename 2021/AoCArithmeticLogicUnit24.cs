@@ -1,4 +1,6 @@
-﻿namespace AdventOfCode_2021;
+﻿using AdventOfCodes;
+
+namespace AdventOfCode_2021;
 
 //I totally stole this code online.
 //I'm so disappointed that one had to read the input to figure out the solution

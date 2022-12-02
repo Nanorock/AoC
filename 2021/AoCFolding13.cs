@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using AdventOfCodes;
 
 namespace AdventOfCode_2021
 {

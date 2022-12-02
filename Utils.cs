@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace AdventOfCode_2021
+namespace AdventOfCodes
 {
     public static class HashCache<T>
     {

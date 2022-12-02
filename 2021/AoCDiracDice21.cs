@@ -1,4 +1,6 @@
-﻿namespace AdventOfCode_2021;
+﻿using AdventOfCodes;
+
+namespace AdventOfCode_2021;
 
 class AoCDiracDice21 : AdventOfCode
 {

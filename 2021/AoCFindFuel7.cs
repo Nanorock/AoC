@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using AdventOfCodes;
 
 namespace AdventOfCode_2021
 {

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using AdventOfCodes;
 
 namespace AdventOfCode_2021;
 

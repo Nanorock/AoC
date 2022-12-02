@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace AdventOfCode_2021;
+namespace AdventOfCodes;
 
 public interface IValueCollection<out T>
 {
