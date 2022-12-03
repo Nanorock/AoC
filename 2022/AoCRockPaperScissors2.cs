@@ -35,8 +35,7 @@ namespace AoC._2022
         {
             if(mine == opponent)
                 return mine + SCORE_DRAW;
-            int previous = (3 + (mine-1) - 1) % 3 + 1;
-            return mine + (previous == opponent ? SCORE_WIN : SCORE_LOSE);
+            return mine + (LoseMove(mine) == opponent ? SCORE_WIN : SCORE_LOSE);
         }
 
         int WinMove(int opponent) => (3 + (opponent-1) + 1) % 3 + 1;

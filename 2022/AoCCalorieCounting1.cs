@@ -13,23 +13,20 @@ class AoCCalorieCounting1 : AdventOfCodes.AdventOfCode
     {
         base.Run1();
         
-        int elfIndex = 0;
-        _elfCalories.Add(0);
         int highestCalories = 0;
+        int runningCalories = 0;
         for (int i = 0; i < inputFile.Length; i++)
         {
             if (string.IsNullOrEmpty(inputFile[i]))
             {
-                ++elfIndex;
-                _elfCalories.Add(0);
+                _elfCalories.Add(runningCalories);
+                runningCalories = 0;
                 continue;
             }
-            int calories = int.Parse(inputFile[i]);
-            int totalCalories = _elfCalories[elfIndex]+=calories;
-            if(totalCalories > highestCalories)
-            {
-                highestCalories = totalCalories;
-            }
+            
+            runningCalories += int.Parse(inputFile[i]);
+            if(runningCalories > highestCalories)
+                highestCalories = runningCalories;
         }
         Console.WriteLine($"Answer is {highestCalories}");
     }
