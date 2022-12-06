@@ -11,6 +11,14 @@ namespace AdventOfCodes
     {
         public static HashSet<T> Value = new HashSet<T>();
     }
+    public static class ListCache<T>
+    {
+        public static List<T> Value = new List<T>();
+    }
+    public static class StackCache<T>
+    {
+        public static Stack<T> Value = new Stack<T>();
+    }
 
     public static class ListEx
     {
@@ -40,10 +48,18 @@ namespace AdventOfCodes
             hash.Clear();
         }
 
-        public static void Reset<T>(this List<T> list, IEnumerable<T> values)
+        public static void Reverse<T>(this Stack<T> stack)
         {
+            var cache = ListCache<T>.Value;
+            cache.Clear();
+            while(stack.Count > 0)
+                cache.Add(stack.Pop());
+            for (int i = 0; i < cache.Count; i++)
+                stack.Push(cache[i]);
         }
     }
+
+    
 
     public static class EnumerableExt
     {

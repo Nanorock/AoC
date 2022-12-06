@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using AdventOfCodes;
 
 namespace AdventOfCode_2021
@@ -37,7 +38,7 @@ namespace AdventOfCode_2021
         void Add(Cave from, Cave c)
         {
             Array.Resize(ref from.Connections, from.Connections.Length + 1);
-            from.Connections[from.Connections.Length - 1] = c;
+            from.Connections[^1] = c;
         }
 
         class Cave
@@ -46,7 +47,7 @@ namespace AdventOfCode_2021
             public readonly bool IsLarge;
             public bool HasEnd;
             public int VisitCount;
-            public Cave[] Connections = new Cave[0];
+            public Cave[] Connections = Array.Empty<Cave>();
         }
         class SpecialCaveMapper
         {
@@ -58,6 +59,7 @@ namespace AdventOfCode_2021
                 Expand(start);
                 return _pathFound;
             }
+            [MaybeNull]
             Cave _doubleCave;
             void Expand(Cave fromCave)
             {
