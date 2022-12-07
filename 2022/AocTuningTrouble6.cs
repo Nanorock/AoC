@@ -25,7 +25,7 @@ namespace AoC._2022
             for (int charIndex = start; charIndex < input.Length; ++charIndex)
             {
                 cb.AddChar(input[charIndex]);
-                if(cb.IsFullyDistinct())
+                if (cb.IsFullyDistinct())
                     return charIndex + 1;
             }
             return -1;
@@ -33,22 +33,22 @@ namespace AoC._2022
 
         class CharBuffer
         {
-            public int Size;
+            readonly int _size;
             int _pointer = 0;
             int _count = 0;
             readonly char[] _buffer;
             readonly Dictionary<char, int> _redundancy;
             public CharBuffer(int size) {
-                Size = size;
-                _buffer = new char[Size];
-                _redundancy = new Dictionary<char, int>(Size);
+                _size = size;
+                _buffer = new char[_size];
+                _redundancy = new Dictionary<char, int>(_size);
             }
             public void AddChar(char c)
             {
                 _redundancy.TryGetValue(c, out var count);
                 _redundancy[c] = count + 1;
                 
-                if(_count < Size)
+                if(_count < _size)
                     _buffer[_count++] = c;
                 else
                 {
@@ -57,11 +57,13 @@ namespace AoC._2022
                         _redundancy.Remove(removed);
 
                     _buffer[_pointer++] = c;
-                    if (_pointer >= Size) 
+                    if (_pointer >= _size) 
                         _pointer = 0;
                 }
             }
-            public bool IsFullyDistinct() => _redundancy.Count == Size;
+            public bool IsFullyDistinct() => _redundancy.Count == _size;
+
+            public char this[int index] => _buffer[(_pointer+index)%_size];
         }
     }
 }
