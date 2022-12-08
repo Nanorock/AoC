@@ -10,10 +10,8 @@ namespace AdventOfCodes
     {
         static void Main(string[] args)
         {
-            //WatchRun(18);
-            //WatchRun(19);
-            //RunLatest(false);
             WatchRunAll(2022);
+            //Run(2022, 8);
             while(true)
                 Console.ReadLine();
         }
