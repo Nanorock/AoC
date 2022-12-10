@@ -466,8 +466,7 @@ namespace AdventOfCodes
 
         public static bool operator >=(Vector2i a, Vector2i b) => a.LengthSquared() >= b.LengthSquared();
 
-        public override string ToString()
-            => $"{GetType().Name} ( {x.ToString()}; {y.ToString()})";
+        public override string ToString() => $"{x},{y}";
 
         public static Vector2i Min(Vector2i v1, Vector2i v2)
         {
